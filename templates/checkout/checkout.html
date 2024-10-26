@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+    <div class="container mx-auto p-8">
+        <h1 class="text-4xl font-bold mb-8 text-center text-gray-800">Atsiskaitymas</h1>
+
+        <!-- Checkout Form -->
+        <form action="{% url 'shop:checkout' %}" method="post" class="bg-white p-8 shadow-lg rounded-lg border border-gray-300">
+            {% csrf_token %}
+
+            <!-- Personal Information -->
+            <div class="mb-4">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-4">Asmens Informacija:</h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                    <div class="w-full">
+                        <label for="first_name" class="block text-sm font-medium text-gray-700">Vardas</label>
+                        <input type="text" name="first_name" id="first_name" class="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow" placeholder="Įveskite savo vardą" required>
+                    </div>
+
+                    <div class="w-full">
+                        <label for="last_name" class="block text-sm font-medium text-gray-700">Pavardė</label>
+                        <input type="text" name="last_name" id="last_name" class="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow" placeholder="Įveskite savo pavardę" required>
+                    </div>
+
+                    <div class="w-full">
+                        <label for="client_phone_number" class="block text-sm font-medium text-gray-700">Telefono Numeris</label>
+                        <input type="text" name="client_phone_number" id="client_phone_number" class="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow" placeholder="Įveskite telefono numerį" required>
+                    </div>
+
+                    <div class="w-full">
+                        <label for="email" class="block text-sm font-medium text-gray-700">El. paštas</label>
+                        <input type="email" name="email" id="email" class="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow" placeholder="Įveskite el. pašto adresą" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Address Section -->
+            <div class="mb-4">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-4">Pristatymo Adresas:</h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                    <div class="w-full">
+                        <label for="city" class="block text-sm font-medium text-gray-700">Miestas</label>
+                        <input type="text" name="city" id="city" class="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow" placeholder="Įveskite miestą" required>
+                    </div>
+
+                    <div class="w-full">
+                        <label for="zip_code" class="block text-sm font-medium text-gray-700">Pašto Kodas</label>
+                        <input type="text" name="zip_code" id="zip_code" class="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow" placeholder="Įveskite pašto kodą" required>
+                    </div>
+
+                    <div class="w-full">
+                        <label for="street" class="block text-sm font-medium text-gray-700">Gatvė</label>
+                        <input type="text" name="street" id="street" class="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow" placeholder="Įveskite gatvę" required>
+                    </div>
+
+                    <div class="w-full">
+                        <label for="house_number" class="block text-sm font-medium text-gray-700">Namo Numeris</label>
+                        <input type="text" name="house_number" id="house_number" class="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow" placeholder="Įveskite namo numerį" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delivery Option Section with Button Design -->
+            <!-- Delivery Option Section with Button Design -->
+            <div class="mb-6">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-4">Pristatymo Būdas:</h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                    {% for option in delivery_options %}
+                        <div class="delivery-option relative" data-option-id="{{ option.id }}">
+                            <input type="radio" name="delivery_option" id="option_{{ option.id }}" value="{{ option.id }}" class="hidden" required>
+                            <label for="option_{{ option.id }}" class="block p-4 border border-gray-300 rounded-lg cursor-pointer transition duration-200 ease-in-out relative">
+                                <!-- Delivery option name -->
+                                <div class="text-lg font-semibold delivery-text">{{ option.delivery_option }}</div>
+                                <!-- Price text with conditional display -->
+                                <div class="text-sm text-gray-500 delivery-price">
+                                    {% if option.delivery_price == 0.0 %}
+                                        NEMOKAMAS
+                                    {% else %}
+                                        Kaina: {{ option.delivery_price }}€
+                                    {% endif %}
+                                </div>
+
+                                <!-- Question mark icon for description -->
+                                <button type="button" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700" onclick="toggleDescription({{ option.id }})">
+                                    <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.529 9.988a2.502 2.502 0 1 1 5 .191A2.441 2.441 0 0 1 12 12.582V14m-.01 3.008H12M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                    </svg>
+                                </button>
+                            </label>
+
+                            <!-- Hidden delivery description popup -->
+                            <div id="description_{{ option.id }}" class="hidden absolute top-full left-0 mt-2 w-full bg-white border border-gray-300 rounded-lg p-4 shadow-lg z-10">
+                                <p class="text-sm text-gray-600">{{ option.delivery_description }}</p>
+                                <button type="button" class="mt-2 text-blue-500 hover:underline" onclick="toggleDescription({{ option.id }})">
+                                    Uždaryti
+                                </button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Payment Method -->
+            <div class="mb-4">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-4">Mokėjimo Būdas</h2>
+                <div class="flex items-center border border-gray-400 p-2 rounded-md w-full">
+                    <input id="bank_transfer" name="payment_method" type="radio" value="bank_transfer" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300" required checked>
+                    <label for="bank_transfer" class="ml-3 block text-sm font-medium text-gray-700">Bankinis Pavedimas</label>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="mt-4">
+                <button type="submit" class="w-full bg-indigo-600 text-white px-6 py-3 rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Užsisakyti
+                </button>
+            </div>
+        </form>
+    </div>
+
+
+    <script>
+
+        function toggleDescription(id) {
+            const description = document.getElementById(`description_${id}`);
+            if (description) {
+                // Toggle visibility
+                description.classList.toggle('hidden');
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const deliveryOptions = document.querySelectorAll('.delivery-option');
+
+            deliveryOptions.forEach(option => {
+                const input = option.querySelector('input[type="radio"]');
+
+                input.addEventListener('change', function () {
+                    // Clear the selected state from all options
+                    deliveryOptions.forEach(o => {
+                        o.querySelector('.delivery-text').classList.remove('text-white');
+                        o.querySelector('.delivery-price').classList.remove('text-white');
+                        o.querySelector('label').classList.remove('bg-indigo-500', 'border-indigo-500', 'text-white');
+                    });
+
+                    // Add the selected state to the selected option
+                    option.querySelector('.delivery-text').classList.add('text-white');
+                    option.querySelector('.delivery-price').classList.add('text-white');
+                    option.querySelector('label').classList.add('bg-indigo-500', 'border-indigo-500', 'text-white');
+                });
+
+                // Set the initially checked option (in case one is pre-selected)
+                if (input.checked) {
+                    option.querySelector('.delivery-text').classList.add('text-white');
+                    option.querySelector('.delivery-price').classList.add('text-white');
+                    option.querySelector('label').classList.add('bg-indigo-500', 'border-indigo-500', 'text-white');
+                }
+            });
+        });
+    </script>
+{% endblock %}

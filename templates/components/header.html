@@ -1,0 +1,18 @@
+<div>
+    <div class="relative flex items-center justify-between h-16">
+        <button id="menu-button" class="absolute left-4 bg-[#8f6d75] text-white p-4 text-xl rounded hover:bg-[#734f59]" onclick="toggleMenu()">☰ Menu</button>
+        <a href="{% url 'shop:index' %}" class="text-3xl font-bold mx-auto">Bogor</a>
+        <a href="{% url 'shop:cart' %}" class="absolute right-4 bg-[#8f6d75] text-white p-4 text-xl rounded hover:bg-[#734f59]">
+            <i class="bi bi-cart"></i> Krepšelis</a>
+    </div>
+    <div id="sidebar" class="fixed top-0 left-0 h-full bg-[#8f6d75] text-white p-4 transform border-r-4 border-[#734f59] -translate-x-full transition-transform duration-300" style="width: 200px;">
+        <button class="font-bold mb-4 cursor-pointer bg-transparent border-none p-4 text-xl rounded hover:bg-[#734f59]" onclick="toggleMenu()">☰ Menu</button>
+
+        <ul class="space-y-4">
+            <li><a href="{% url 'shop:index' %}" class="block hover:bg-[#734f59] rounded p-2">Pagrindinis</a></li>
+            <li><a href="{% url 'shop:flowers' %}" class="block hover:bg-[#734f59] rounded p-2">Puokštės</a></li>
+            <li><a href="{% url 'shop:decorations' %}" class="block hover:bg-[#734f59] rounded p-2">Dekoracijos</a></li>
+            <li><a href="#" class="block hover:bg-[#734f59] rounded p-2">Papuošalai</a></li>
+        </ul>
+    </div>
+</div>

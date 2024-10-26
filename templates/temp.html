@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+    <!-- Page Container -->
+    <div class="container mx-auto py-8 px-4 lg:px-8">
+
+        <!-- Bouquet and Grid Container -->
+        <div class="bg-[#8F6D75] p-6 rounded-lg border-4 border-[#734F59] mb-12">
+            <div class="flex flex-col lg:flex-row gap-8">
+                <!-- Left Section: Bouquet Image -->
+                <div class="w-full lg:w-1/2 flex justify-center items-center">
+                    {% if first_product %}
+                        <img id="bouquet-img" src="{{ first_product.bouquets_img.url }}" alt="{{ first_product.color }} bouquet"
+                             class="object-contain rounded-lg max-w-full h-auto">
+                    {% endif %}
+                </div>
+
+                <!-- Right Section: Flower Grid and Add to Cart -->
+                <div class="w-full lg:w-1/2">
+                    <form action="{% url 'shop:add_to_cart' %}" method="post">
+                        {% csrf_token %}
+
+                        <!-- Grid Container for Flowers -->
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 auto-rows-auto">
+                            {% for flower in flowers_data %}
+                                <div class="bg-white p-4 rounded-lg shadow-md flex flex-col items-center">
+
+                                    <!-- Flower Image -->
+                                    <img src="{{ flower.flower_img.url }}" alt="{{ flower.color }} bouquet"
+                                         class="w-16 h-16 object-cover object-center rounded-md mb-2 cursor-pointer"
+                                         data-bouquet-url="{{ flower.bouquets_img.url }}">
+
+                                    <!-- Quantity Controls -->
+                                    <div class="flex items-center justify-between space-x-2">
+                                        <button type="button" class="decrement-button bg-[#734F59] text-white rounded-full p-2 hover:bg-[#5a3b45]">
+                                            <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 2" fill="none">
+                                                <path stroke="currentColor" stroke-width="2" d="M1 1h16" stroke-linecap="round" stroke-linejoin="round"></path>
+                                            </svg>
+                                        </button>
+
+                                        <input type="text" class="quantity-input bg-[#8F6D75] text-white text-center w-12 border-[#734F59] rounded p-1 focus:ring-[#734F59]"
+                                               value="0" name="quantity[]" required>
+                                        <button type="button" class="increment-button bg-[#734F59] text-white rounded-full p-2 hover:bg-[#5a3b45]">
+                                            <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" fill="none">
+                                                <path stroke="currentColor" stroke-width="2" d="M9 1v16M1 9h16" stroke-linecap="round" stroke-linejoin="round"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <input type="hidden" name="flower_id[]" value="{{ flower.id }}">
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Add to Cart Button -->
+                        <div class="mt-8">
+                            <button type="submit" class="bg-[#734F59] text-white rounded-lg w-full py-3 hover:bg-[#5a3b45] focus:ring-2 focus:ring-[#734F59]">
+                                Add to Cart
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Puokščių Galerija Section (Photo Gallery) -->
+        <div id="gallery" class="bg-[#8F6D75] py-16 px-4 rounded-lg border-4 border-[#734F59]">
+            <h2 class="text-3xl font-bold text-white text-center mb-10">Puokščių galerija</h2>
+            <div class="carousel-container relative max-w-full">
+                <div class="carousel flex overflow-hidden snap-x snap-mandatory scroll-smooth">
+                    <!-- Loop through products -->
+                    {% for flower in flowers_data %}
+                        <div class="carousel-item flex-none w-full sm:w-1/2 md:w-1/3 p-4 snap-center">
+                            {% if flower.bouquets_img %}
+                                <div class="rounded-lg bg-[#734F59] shadow-lg overflow-hidden">
+                                    <img src="{{ flower.bouquets_img.url }}" alt="Bouquet Image" class="w-full h-auto object-cover rounded-lg">
+                                    <div class="p-4">
+                                        <h3 class="font-bold text-lg text-white">{{ flower.color }} Puokštė</h3>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <p class="text-white">No bouquet image available.</p>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Carousel Navigation Buttons -->
+                <div class="flex justify-center mt-8 gap-3">
+                    <button class="prev w-10 h-10 bg-[#734F59] text-white rounded-full hover:bg-white hover:text-[#734F59] p-2">
+                        &#10094;
+                    </button>
+                    <button class="next w-10 h-10 bg-[#734F59] text-white rounded-full hover:bg-white hover:text-[#734F59] p-2">
+                        &#10095;
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .decrement-button, .increment-button {
+            padding: 0.25rem; /* Smaller padding for buttons */
+            width: 1.5rem; /* Reduced width */
+            height: 1.5rem; /* Reduced height */
+        }
+
+        .quantity-input {
+            width: 3rem; /* Reduce the width of the quantity input */
+        }
+
+        .flower-item {
+            padding: 1rem;
+        }
+
+        .grid-cols-4 {
+            max-height: 400px;
+        }
+
+        /* Responsive styles */
+        @media (max-width: 640px) {
+            .flower-item {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var bouquetImg = document.getElementById('bouquet-img');
+            var flowerImages = document.querySelectorAll('[data-bouquet-url]');
+            var imageCache = {};
+
+            // Preload images
+            flowerImages.forEach(function (flowerImg) {
+                var url = flowerImg.getAttribute('data-bouquet-url');
+                var img = new Image();
+                img.src = url;
+                imageCache[url] = img;
+            });
+
+            flowerImages.forEach(function (flowerImg) {
+                flowerImg.addEventListener('click', function () {
+                    var newBouquetUrl = flowerImg.getAttribute('data-bouquet-url');
+                    if (imageCache[newBouquetUrl].complete) {
+                        bouquetImg.src = newBouquetUrl;
+                    } else {
+                        imageCache[newBouquetUrl].onload = function () {
+                            bouquetImg.src = newBouquetUrl;
+                        };
+                    }
+                });
+            });
+
+            // Increment and decrement functionality
+            document.querySelectorAll('.increment-button').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    var input = this.parentElement.querySelector('.quantity-input');
+                    input.value = parseInt(input.value) + 1;
+                });
+            });
+
+            document.querySelectorAll('.decrement-button').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    var input = this.parentElement.querySelector('.quantity-input');
+                    if (parseInt(input.value) > 0) {
+                        input.value = parseInt(input.value) - 1;
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ deco_type.decoration_type }}{% endblock %}
+
+{% block content %}
+    <div class="container mx-auto p-6">
+        <!-- Main container -->
+        <div class="bg-[#8F6D75] p-6 rounded-lg border-4 border-[#734F59] flex flex-col sm:flex-row gap-8">
+            <!-- Left: Decoration image -->
+            <div class="w-full sm:w-1/2">
+                <img src="{{ deco_type.product_image.url }}" alt="{{ deco_type.decoration_type }}" class="w-full h-full object-contain mb-4 rounded-lg">
+            </div>
+
+            <!-- Right: Decoration details -->
+            <div class="w-full sm:w-1/2">
+                <h2 class="text-3xl font-bold text-white mb-4">{{ deco_type.decoration_type }}</h2>
+                <p class="text-2xl text-white mb-4">{{ decorations.first.price }}€</p>
+
+                <!-- Add the form to capture color and quantity -->
+                <form action="{% url 'shop:add_to_cart' %}" method="post" onsubmit="return validateForm()">
+                    {% csrf_token %}
+
+                    <!-- Hidden field for selected decoration ID and color -->
+                    <input type="hidden" name="decoration_id[]" id="selected-decoration-id" value="">
+                    <input type="hidden" id="selected-color" name="color" value="">
+
+                    <!-- Color selection with buttons -->
+                    <div class="mb-6">
+                        <p class="text-lg text-white font-semibold mb-2">Spalva:</p>
+                        <div class="flex flex-wrap gap-4">
+                            {% for decoration in decorations %}
+                                <button type="button" class="color-button px-4 py-2 border border-[#734F59] rounded-lg text-white cursor-pointer"
+                                        data-color="{{ decoration.color }}"
+                                        data-decoration-id="{{ decoration.id }}"
+                                        onclick="selectColor('{{ decoration.color }}', '{{ decoration.id }}')">
+                                    {{ decoration.color }}
+                                </button>
+                            {% empty %}
+                                <p class="text-white">No colors available for this product.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Quantity selection -->
+                    <div class="mb-6">
+                        <p class="text-lg text-white font-semibold mb-2">Kiekis</p>
+                        <div class="flex items-center gap-4">
+                            <button type="button" class="decrement-button px-4 py-2 border border-[#734F59] text-xl text-white">-</button>
+                            <input type="text" name="quantity[]" value="1" class="quantity-input bg-[#8F6D75] text-white text-center w-12 border-[#734F59] rounded p-1 focus:ring-[#734F59]">
+                            <button type="button" class="increment-button px-4 py-2 border border-[#734F59] text-xl text-white">+</button>
+                        </div>
+                    </div>
+
+                    <!-- Submit -->
+                    <button type="submit" class="bg-[#734F59] text-white px-8 py-4 mt-4 rounded-lg w-full">Įdėti į krepšelį</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedColor = null;
+        let selectedDecorationId = null;
+
+        // Function to handle color selection
+        function selectColor(color, decorationId) {
+            selectedColor = color;
+            selectedDecorationId = decorationId;
+
+            document.getElementById('selected-color').value = color;
+            document.getElementById('selected-decoration-id').value = decorationId;
+
+            document.querySelectorAll('.color-button').forEach(button => {
+                button.classList.remove('bg-[#734F59]', 'text-white', 'border-[#734F59]');
+                button.classList.add('bg-transparent', 'text-white', 'border-[#734F59]');
+            });
+
+            const selectedButton = document.querySelector(`[data-color="${color}"]`);
+            selectedButton.classList.remove('bg-transparent', 'text-white', 'border-[#734F59]');
+            selectedButton.classList.add('bg-[#734F59]', 'text-white', 'border-white');
+        }
+
+        // Function to validate the form before submission
+        function validateForm() {
+            // Check if a color is selected
+            if (!selectedColor || !selectedDecorationId) {
+                alert('Please select a color before adding the product to the cart.');
+                return false;  // Prevent form submission
+            }
+            return true;  // Allow form submission
+        }
+
+        // Increment and Decrement quantity controls
+        document.querySelectorAll('.increment-button').forEach(button => {
+            button.addEventListener('click', function () {
+                let input = this.previousElementSibling;
+                input.value = parseInt(input.value) + 1;
+            });
+        });
+
+        document.querySelectorAll('.decrement-button').forEach(button => {
+            button.addEventListener('click', function () {
+                let input = this.nextElementSibling;
+                if (parseInt(input.value) > 1) {
+                    input.value = parseInt(input.value) - 1;
+                }
+            });
+        });
+    </script>
+{% endblock %}

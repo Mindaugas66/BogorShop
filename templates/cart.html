@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+    <div class="container mx-auto p-6">
+        <h1 class="text-4xl font-bold mb-4 text-center text-gray-800">Jūsų Krepšelis</h1>
+
+        <!-- Display any messages -->
+        {% if messages %}
+            <div class="mb-4">
+                {% for message in messages %}
+                    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+                        <span class="block sm:inline">{{ message }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Display cart items -->
+        {% if cart_items %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% for item in cart_items %}
+                    <div class="bg-white shadow-md rounded-lg p-3 relative">
+                        <!-- Remove item button in the top-right corner -->
+                        <form action="{% url 'shop:remove_from_cart' item.id %}" method="post" class="absolute top-2 right-2">
+                            {% csrf_token %}
+                            <button type="submit" class="hover:text-red-700 border border-red-500 rounded p-1">
+                                <svg class="w-6 h-6 text-red-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6"/>
+                                </svg>
+                            </button>
+                        </form>
+
+                        <!-- Display item image and details -->
+                        <div class="flex items-start">
+                            {% if item.decoration %}
+                                <img src="{{ item.decoration.image.url }}" alt="{{ item.decoration.color }} {{ item.decoration.type.decoration_type }}" class="w-16 h-16 object-cover rounded-md mr-4">
+                                <div>
+                                    <h2 class="text-lg font-bold text-gray-800">{{ item.decoration.type.decoration_type }}</h2>
+                                    <p class="text-sm text-gray-600">{{ item.decoration.color }}</p>
+                                    <p class="text-sm text-gray-600">Kaina: ${{ item.total_price|floatformat:2 }}</p>
+                                </div>
+                            {% else %}
+                                <img src="{{ item.flower.flower_img.url }}" alt="{{ item.flower.color }}" class="w-16 h-16 object-cover rounded-md mr-4">
+                                <div>
+                                    <h2 class="text-lg font-bold text-gray-800">{{ item.flower.color }}</h2>
+                                    <p class="text-sm text-gray-600">Kaina: ${{ item.total_price|floatformat:2 }}</p>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Quantity field positioned below, aligned right -->
+                        <div class="mt-2 flex justify-end">
+                            <form action="{% url 'shop:update_cart' %}" method="post" class="bg-white p-1 rounded-md">
+                                {% csrf_token %}
+                                <input type="hidden" name="item_id" value="{{ item.id }}">
+                                <label for="quantity_{{ item.id }}" class="block text-sm font-semibold text-gray-600">Kiekis:</label>
+                                <input id="quantity_{{ item.id }}" type="number" name="quantity" value="{{ item.quantity }}" min="1" class="mt-1 w-16 text-center border border-gray-300 rounded-md" oninput="delayedSubmit(this.form);">
+                            </form>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Display cart total and buttons -->
+            <div class="flex justify-between items-center mt-6">
+                <div class="w-full md:w-1/2 lg:w-1/3">
+                    <div class="bg-gray-100 p-4 rounded-lg">
+                        <h2 class="text-lg font-bold text-gray-700">Viso:</h2>
+                        <p class="text-xl font-semibold text-gray-800">
+                            ${{ cart_total|floatformat:2 }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Clear Cart Button Next to Total -->
+                <form action="{% url 'shop:clear_cart' %}" method="post" class="ml-4">
+                    {% csrf_token %}
+                    <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-red-600">
+                        Išvalyti Krepšelį
+                    </button>
+                </form>
+            </div>
+
+            <!-- Checkout Button -->
+            <div class="flex justify-end mt-4">
+                <a href="{% url 'shop:checkout' %}">
+                    <button class="text-white bg-green-500 px-6 py-2 rounded-lg shadow-md hover:bg-green-600">
+                        Atsiskaityti
+                    </button>
+                </a>
+            </div>
+        {% else %}
+            <p class="text-xl text-gray-600 text-center">Jūsų krepšelis šiuo metu yra tuščias.</p>
+        {% endif %}
+    </div>
+
+    <script>
+        let timer;
+
+        function delayedSubmit(form) {
+            clearTimeout(timer);
+            timer = setTimeout(function () {
+                // Ensure the quantity is set to 1 if the input is empty
+                const quantityInput = form.querySelector('input[name="quantity"]');
+                if (!quantityInput.value || isNaN(quantityInput.value) || parseInt(quantityInput.value) <= 0) {
+                    quantityInput.value = 1;
+                }
+                form.submit();
+            }, 1000);  // 1-second delay to avoid multiple rapid form submissions
+        }
+    </script>
+{% endblock %}

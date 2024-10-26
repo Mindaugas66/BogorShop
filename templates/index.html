@@ -1,0 +1,172 @@
+
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+    <div>
+        <div id="welcome" class="bg-[#8F6D75] flex flex-col text-white mb-10 justify-center min-h-max px-10 text-center rounded-lg mx-auto shadow-lg font-serif border-4 border-[#734F59] max-w-7xl">
+            <div class="py-20 px-10">
+                <h1 class="text-3xl mb-8 font-bold py-5 leading-tight">Satino rožės – jūsų ypatingai progai</h1>
+                <p class="text-2xl max-w-2xl leading-relaxed mx-auto">Rankų darbo satino rožės yra amžinas grožis, skirtas ypatingoms akimirkoms.</p>
+                <a href="{% url 'shop:flowers' %}">
+                    <button class="flex items-center bg-[#734F59] hover:bg-[#8F6D75] text-white font-semibold py-4 px-4 rounded-lg shadow-lg w-auto mx-auto mt-12">
+                        <i class="bi bi-cart-fill mr-2"></i>
+                        Užsisakyti puokštę
+                    </button>
+                </a>
+            </div>
+        </div>
+
+        <div id="gallery" class="bg-[#8F6D75] py-16 px-4 rounded-lg mx-auto border-4 border-[#734F59] max-w-7xl">
+            <h2 class="text-3xl font-bold text-white text-center mb-10">Puokščių galerija</h2>
+            <div class="carousel-container relative max-w-8xl">
+                <!-- Carousel Wrapper -->
+                <div class="carousel flex overflow-hidden snap-x snap-mandatory scroll-smooth">
+                    <!-- Loop through products -->
+                    {% for product in products %}
+                        <div class="carousel-item flex-none w-full sm:w-1/2 md:w-1/3 p-4 snap-center">
+                            <!-- Display Product Image if exists -->
+                            {% if product.bouquets_img %}
+                                <div class="rounded-lg bg-[#734F59] shadow-lg overflow-hidden">
+                                    <img src="{{ product.bouquets_img.url }}" alt="Bouquet Image" class="w-full h-auto object-cover rounded-lg">
+                                    <div class="p-4 bg-[#734F59]">
+                                        <h3 class="font-bold text-lg text-white">{{ product.color }} Puokštė</h3>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <p>No bouquet image available.</p>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+                <!-- Pagination Dots with Buttons outside -->
+                <div class="flex justify-center items-center mt-4">
+                    <!-- Left Button -->
+                    <button class="prev text-white w-10 h-10 bg-[#734F59] p-2 rounded-full hover:bg-white hover:text-[#734F59]">
+                        &#10094;
+                    </button>
+                    <!-- Pagination Dots -->
+                    <div class="pagination-dots flex justify-center items-center space-x-2 mx-4">
+                        {% for i in products %}
+                            <div class="dot h-2 w-2 bg-gray-300 rounded-full"></div>
+                        {% endfor %}
+                    </div>
+                    <!-- Right Button -->
+                    <button class="next text-white w-10 h-10 bg-[#734F59] p-2 rounded-full hover:bg-white hover:text-[#734F59]">
+                        &#10095;
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Apie mane Section -->
+        <div id="apie-mane" class="bg-[#8F6D75] py-16 px-10 rounded-lg mx-auto border-4 border-[#734F59] max-w-7xl mt-10">
+            <h2 class="text-3xl font-bold text-white text-center mb-10">Apie mane</h2>
+            <div class="flex flex-col items-center md:flex-row md:justify-between">
+                <div class="text-white mb-8 md:mb-0 md:mr-8 text-justify">
+                    <p class="text-lg leading-relaxed">
+                        Sveiki! Aš esu Evelina, 24 metų kūrėja iš Kauno. Nuo vaikystės mėgstu rankdarbius, o pastaruoju metu atradau aistrą gaminti šilkines rožes. Kiekvieną žiedlapį formuoju su meile ir rūpesčiu, siekdama suteikti Jums
+                        džiaugsmą ir grožį. ❤️
+                    </p>
+                    <p class="text-lg leading-relaxed mt-4">
+                        Ačiū, kad apsilankėte mano parduotuvėje! Tikiuosi, mano šilkinės rožės suteiks Jums tiek pat laimės, kiek man jų kūrimas. ❤️
+                    </p>
+                </div>
+                <img src="{% get_media_prefix %}images/evelina.jpg" class="w-64" alt="Evelina">
+            </div>
+        </div>
+    </div>
+    <!-- Image Switch -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const carousel = document.querySelector('.carousel');
+            const prevButton = document.querySelector('.prev');
+            const nextButton = document.querySelector('.next');
+            const dots = document.querySelectorAll('.dot'); // Get all dots
+            const itemWidth = document.querySelector('.carousel-item').clientWidth;
+
+            let scrollPosition = 0;
+            const totalItems = dots.length; // Number of items in the carousel
+
+            // Function to update the active dot
+            function updateActiveDot() {
+                const currentIndex = Math.round(scrollPosition / itemWidth);
+
+                dots.forEach((dot, index) => {
+                    if (index === currentIndex) {
+                        dot.classList.add('bg-blue-500');
+                        dot.classList.remove('bg-gray-300');
+                    } else {
+                        dot.classList.add('bg-gray-300');
+                        dot.classList.remove('bg-blue-500');
+                    }
+                });
+            }
+
+            // Next Button
+            nextButton.addEventListener('click', function () {
+                if (scrollPosition < (itemWidth * (totalItems - 1))) {
+                    scrollPosition += itemWidth;
+                    carousel.scroll({
+                        left: scrollPosition,
+                        behavior: 'smooth',
+                    });
+                    updateActiveDot(); // Update the active dot
+                }
+            });
+
+            // Prev Button
+            prevButton.addEventListener('click', function () {
+                if (scrollPosition > 0) {
+                    scrollPosition -= itemWidth;
+                    carousel.scroll({
+                        left: scrollPosition,
+                        behavior: 'smooth',
+                    });
+                    updateActiveDot(); // Update the active dot
+                }
+            });
+
+            // Initial setup for the first dot
+            updateActiveDot();
+
+            // Swipe detection for mobile/touch devices
+            let startX;
+            let endX;
+
+            carousel.addEventListener('touchstart', function (e) {
+                startX = e.touches[0].clientX;
+            });
+
+            carousel.addEventListener('touchmove', function (e) {
+                endX = e.touches[0].clientX;
+            });
+
+            carousel.addEventListener('touchend', function () {
+                const diffX = startX - endX;
+
+                // Swipe left to go to the next item
+                if (diffX > 50) {
+                    if (scrollPosition < (itemWidth * (totalItems - 1))) {
+                        scrollPosition += itemWidth;
+                        carousel.scroll({
+                            left: scrollPosition,
+                            behavior: 'smooth',
+                        });
+                        updateActiveDot();
+                    }
+                }
+                // Swipe right to go to the previous item
+                else if (diffX < -50) {
+                    if (scrollPosition > 0) {
+                        scrollPosition -= itemWidth;
+                        carousel.scroll({
+                            left: scrollPosition,
+                            behavior: 'smooth',
+                        });
+                        updateActiveDot();
+                    }
+                }
+            });
+        });
+    </script>
+
+{% endblock %}

@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+    <!-- Bouquet and Grid Container -->
+    <div class="bg-[#8F6D75] p-6 rounded-lg border-4 border-[#734F59] mb-12">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            <!-- Left Section: Bouquet Image -->
+            <div class="w-full flex justify-center items-center">
+                {% if first_product %}
+                    <img id="bouquet-img" src="{{ first_product.bouquets_img.url }}" alt="{{ first_product.color }} bouquet"
+                         class="object-contain rounded-lg max-w-full h-auto">
+                {% endif %}
+            </div>
+
+            <!-- Right Section: Flower Grid and Add to Cart -->
+            <div class="w-full">
+                <p class="text-xl py-3 text-white my-4 block">lgaamžė, rankų darbo grožybė iš satino šilko, kuri niekada nevys. Kiekviena rožė kruopščiai pagaminta iš aukštos kokybės medžiagos.</p>
+                <form action="{% url 'shop:add_to_cart' %}" method="post">
+                    {% csrf_token %}
+
+                    <!-- Simple Grid Container for Flowers -->
+                    <a class="text-sm text-white my-3">Pasirinkite norimas spalvas bei norima gėlių kiekį:</a>
+                    <div class="grid gap-3 pt-3" style="grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));">
+                        {% for flower in flowers_data %}
+                            <div class="p-4 rounded-lg shadow-md flex flex-col items-center">
+                                <!-- Flower Image -->
+                                <img src="{{ flower.flower_img.url }}" alt="{{ flower.color }} bouquet"
+                                     class="w-16 h-16 object-cover object-center rounded-md mb-2 cursor-pointer"
+                                     data-bouquet-url="{{ flower.bouquets_img.url }}"
+                                     onclick="changeBouquetImage('{{ flower.bouquets_img.url }}')">
+
+                                <!-- Quantity Controls -->
+                                <div class="flex items-center justify-between space-x-2">
+                                    <button type="button" class="decrement-button bg-[#734F59] text-white rounded-full p-2 hover:bg-[#5a3b45]">
+                                        &minus; <!-- Minus symbol -->
+                                    </button>
+
+                                    <label>
+                                        <input type="text" class="quantity-input bg-[#8F6D75] text-white text-center w-12 border-[#734F59] rounded p-1 focus:ring-[#734F59]"
+                                               value="0" name="quantity[]" data-price="{{ flower.price }}" required>
+                                    </label>
+
+                                    <button type="button" class="increment-button bg-[#734F59] text-white rounded-full p-2 hover:bg-[#5a3b45]">
+                                        &#43; <!-- Plus symbol -->
+                                    </button>
+                                </div>
+                                <input type="hidden" name="flower_id[]" value="{{ flower.id }}">
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div class="pt-3">
+                        <a class="text-sm text-white italic">DĖMESIO! Gėlių spalvos nuotraukose ir realybėje gali šiek tiek skirtis.</a>
+                    </div>
+
+
+                    <!-- Add to Cart Button with Total Price -->
+                    <div class="mt-8">
+                        <button type="submit" class="bg-[#734F59] text-white rounded-lg w-full py-3 hover:bg-[#5a3b45] focus:ring-2 focus:ring-[#734F59]">
+                            <span id="total-price">0.00€</span> Pridėti į krepšelį
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-[#8F6D75] p-6 rounded-lg border-4 border-[#734F59] mb-12">
+        <h2 class="text-2xl font-bold text-white mb-4">Dekoracijos:</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {% for decoration_type in decoration_types|slice:":3" %}
+                <div class="bg-[#734F59] p-4 rounded-lg shadow-md">
+                    <img src="{{ decoration_type.product_image.url }}" alt="{{ decoration_type.decoration_type }}" class="w-full object-cover rounded-lg mb-2">
+                    <h3 class="text-lg font-bold text-white">{{ decoration_type.decoration_type }}</h3>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="mt-4 text-center">
+            <a href="{% url 'shop:decorations' %}" class="bg-[#734F59] text-white px-4 py-2 rounded hover:bg-[#5a3b45]">Daugiau Dekoracijų</a>
+        </div>
+    </div>
+
+    <!-- Second Section: Gallery -->
+    <div id="gallery" class="bg-[#8F6D75] py-16 px-4 rounded-lg mx-auto border-4 border-[#734F59]">
+        <h2 class="text-3xl font-bold text-white text-center mb-10">Puokščių galerija</h2>
+        <div class="carousel-container relative max-w-full">
+            <!-- Carousel Wrapper -->
+            <div class="carousel flex overflow-hidden snap-x snap-mandatory scroll-smooth" id="carousel-wrapper">
+                <!-- Loop through products -->
+                {% for flower in flowers_data %}
+                    <div class="carousel-item flex-none w-full sm:w-1/2 md:w-1/3 p-4 snap-center">
+                        <!-- Display Product Image if exists -->
+                        {% if flower.bouquets_img %}
+                            <div class="rounded-lg bg-[#734F59] shadow-lg overflow-hidden">
+                                <img src="{{ flower.bouquets_img.url }}" alt="Bouquet Image" class="w-full h-auto object-cover rounded-lg">
+                                <div class="p-4 bg-[#734F59]">
+                                    <h3 class="font-bold text-lg text-white">{{ flower.color }} Puokštė</h3>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Carousel navigation buttons -->
+            <div class="flex justify-center items-center mt-8 gap-3">
+                <button class="prev text-white w-10 h-10 bg-[#734F59] p-2 rounded-full hover:bg-white hover:text-[#734F59]">
+                    &#10094;
+                </button>
+                <button class="next text-white w-10 h-10 bg-[#734F59] p-2 rounded-full hover:bg-white hover:text-[#734F59]">
+                    &#10095;
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .quantity-input {
+            width: 2.5rem; /* Reduce the width of the quantity input */
+        }
+
+        .decrement-button, .increment-button {
+            padding: 0.25rem; /* Adjust padding to create enough space */
+            width: 2rem; /* Same height and width to make them circular */
+            height: 2rem;
+            display: flex;
+            align-items: center; /* Center vertically */
+            justify-content: center; /* Center horizontally */
+            font-size: 1rem; /* Adjust font size for the icons */
+            line-height: 1; /* Ensure line height doesn’t affect centering */
+        }
+
+        .decrement-button svg, .increment-button svg {
+            width: 2rem; /* Control the size of the icon */
+            height: 1rem;
+        }
+    </style>
+
+    <script>
+        function changeBouquetImage(newImageUrl) {
+            const bouquetImgElement = document.getElementById('bouquet-img');
+            bouquetImgElement.src = newImageUrl;
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var totalPriceElement = document.getElementById('total-price');
+
+            // Function to calculate the total price
+            function calculateTotalPrice() {
+                var totalPrice = 0;
+                document.querySelectorAll('.quantity-input').forEach(function (input) {
+                    var quantity = parseInt(input.value) || 0;
+                    var price = parseFloat(input.dataset.price);
+                    totalPrice += quantity * price;
+                });
+                totalPriceElement.innerText = totalPrice.toFixed(2) + '€';
+            }
+
+            // Increment and decrement functionality
+            document.querySelectorAll('.increment-button').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    var input = this.parentElement.querySelector('.quantity-input');
+                    input.value = parseInt(input.value) + 1;
+                    calculateTotalPrice(); // Update the total price
+                });
+            });
+
+            document.querySelectorAll('.decrement-button').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    var input = this.parentElement.querySelector('.quantity-input');
+                    if (parseInt(input.value) > 0) {
+                        input.value = parseInt(input.value) - 1;
+                    }
+                    calculateTotalPrice(); // Update the total price
+                });
+            });
+
+            // Also update total price when input is manually changed
+            document.querySelectorAll('.quantity-input').forEach(function (input) {
+                input.addEventListener('input', calculateTotalPrice);
+            });
+
+            // Carousel Functionality
+            const carouselWrapper = document.getElementById('carousel-wrapper');
+            const prevButton = document.querySelector('.prev');
+            const nextButton = document.querySelector('.next');
+
+            let scrollAmount = 0;
+            const scrollStep = 300; // Adjust for smooth scrolling
+
+            // Next button functionality
+            nextButton.addEventListener('click', function () {
+                carouselWrapper.scrollBy({left: scrollStep, behavior: 'smooth'});
+            });
+
+            // Previous button functionality
+            prevButton.addEventListener('click', function () {
+                carouselWrapper.scrollBy({left: -scrollStep, behavior: 'smooth'});
+            });
+
+            // Swipe functionality
+            let touchStartX = 0;
+
+            carouselWrapper.addEventListener('touchstart', function (event) {
+                touchStartX = event.touches[0].clientX;
+            });
+
+            carouselWrapper.addEventListener('touchmove', function (event) {
+                if (!touchStartX) return;
+                let touchEndX = event.touches[0].clientX;
+                let swipeDistance = touchEndX - touchStartX;
+
+                if (swipeDistance > 50) {
+                    // Swipe right
+                    prevButton.click();
+                    touchStartX = 0;
+                } else if (swipeDistance < -50) {
+                    // Swipe left
+                    nextButton.click();
+                    touchStartX = 0;
+                }
+            });
+        });
+    </script>
+{% endblock %}

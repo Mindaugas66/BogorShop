@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load static %}
+{% load custom_filters %}
+{% block title %}Decorations{% endblock %}
+
+{% block content %}
+    <!-- decorations.html -->
+    <div class="container mx-auto p-3">
+        <!-- Loop through decoration types and display each product type -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6"> <!-- Increased gap to 6 for breathing space -->
+            {% for deco_type in dec_types %}
+                <!-- Set width and remove max-w-md to let the container grow moderately -->
+                <div class="bg-[#8F6D75] w-full p-2 rounded-lg border-2 border-[#734F59] mb-4">
+                    <!-- Make the image a clickable link to the product page -->
+                    <a href="{% url 'shop:product_detail' deco_type.id %}">
+                        <img src="{{ deco_type.product_image.url }}" alt="{{ deco_type.product_image.url }}"
+                             class="h-80 object-contain w-full mb-2">
+                    </a>
+
+                    <h2 class="text-xl font-bold text-white mb-2">{{ deco_type.decoration_type }}</h2>
+
+                    {% with deco_type_id=deco_type.id %}
+                        <p class="text-lg font-bold text-white mb-2">
+                            Kaina: {{ first_product_prices|default_if_none:None|dict_key:deco_type_id }}€
+                        </p>
+                    {% endwith %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

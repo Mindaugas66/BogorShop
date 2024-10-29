@@ -1,0 +1,99 @@
+<!-- Decoration Types Section -->
+<div id="decoration-types-section" class="tab-content hidden">
+    <div class="flex justify-between items-center my-6">
+        <h2 class="text-2xl font-semibold text-gray-700">All Decoration Types</h2>
+        <button onclick="openAddDecorationTypeModal()" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded text-sm">
+            <i class="bi bi-plus-circle"></i> Add New Decoration Type
+        </button>
+    </div>
+    <div class="bg-white shadow-md rounded p-4">
+        <table class="min-w-full table-auto">
+            <thead class="bg-gray-800 text-white">
+            <tr>
+                <th class="py-2 px-4 text-center">Type Image</th>
+                <th class="py-2 px-4 text-center">Type Name</th>
+                <th class="py-2 px-4 text-center">Actions</th>
+            </tr>
+            </thead>
+            <tbody class="text-gray-700">
+            {% for type in decoration_types %}
+                <tr class="border-b">
+                    <td class="py-3 px-4 flex justify-center items-center">
+                        <img src="{{ type.product_image.url }}" alt="{{ type.decoration_type }}" class="w-16 h-16 rounded shadow">
+                    </td>
+                    <td class="py-3 px-4 text-center">{{ type.decoration_type }}</td>
+                    <td class="py-3 px-4 flex justify-center items-center">
+                        <div class="flex space-x-2">
+                            <!-- Edit Button -->
+                            <button onclick="openEditDecorationTypeModal({{ type.id }})" class="bg-yellow-500 hover:bg-yellow-600 text-white p-2 rounded-full" title="Edit">
+                                <i class="bi bi-pencil-fill"></i>
+                            </button>
+                            <!-- Delete Button -->
+                            <a href="{% url 'shop:delete_decoration_type' type.id %}" class="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full" title="Delete" onclick="return confirm('Are you sure you want to delete this decoration type?');">
+                                <i class="bi bi-trash-fill"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="3" class="text-center py-4">No decoration types added yet.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add/Edit Decoration Type Modal -->
+<div id="add-decoration-type-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden">
+    <div class="bg-white p-6 rounded shadow-md w-96">
+        <div class="flex justify-between items-center mb-4">
+            <h2 id="decoration-type-modal-title" class="text-xl font-semibold">Add New Decoration Type</h2>
+            <button onclick="closeAddDecorationTypeModal()" class="text-gray-500">&times;</button>
+        </div>
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" id="edit-type-id" name="edit_type_id">
+            <div class="mb-4">
+                <label for="id_decoration_type" class="block text-gray-700 font-medium mb-2">Type Name</label>
+                <input type="text" name="decoration_type_name" id="id_decoration_type" class="w-full p-3 border border-gray-300 rounded" placeholder="Enter decoration type name">
+            </div>
+            <div class="mb-4">
+                <label for="id_product_image" class="block text-gray-700 font-medium mb-2">Type Image</label>
+                <input type="file" name="decoration_type_image" id="id_product_image" class="w-full p-3 border border-gray-300 rounded">
+            </div>
+            <div class="flex justify-end space-x-2 mt-4">
+                <button type="button" onclick="closeAddDecorationTypeModal()" class="bg-gray-500 text-white px-4 py-2 rounded">Cancel</button>
+                <button type="submit" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded" name="add_decoration_type">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- JavaScript for Modal Control -->
+<script>
+    function openAddDecorationTypeModal() {
+        document.getElementById('add-decoration-type-modal').classList.remove('hidden');
+        document.getElementById('decoration-type-modal-title').innerText = "Add New Decoration Type";
+        document.getElementById('edit-type-id').value = ''; // Clear edit ID
+        document.getElementById('id_decoration_type').value = ''; // Clear input fields
+        document.getElementById('id_product_image').value = null;
+    }
+
+    function closeAddDecorationTypeModal() {
+        document.getElementById('add-decoration-type-modal').classList.add('hidden');
+    }
+
+    function openEditDecorationTypeModal(typeId) {
+        fetch(`/adminas/products/decorationtype/${typeId}/`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('add-decoration-type-modal').classList.remove('hidden');
+                document.getElementById('decoration-type-modal-title').innerText = "Edit Decoration Type";
+                document.getElementById('id_decoration_type').value = data.decoration_type;
+                document.getElementById('edit-type-id').value = data.id;
+            })
+            .catch(error => console.error('Error fetching decoration type data:', error));
+    }
+</script>

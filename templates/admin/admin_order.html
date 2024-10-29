@@ -1,0 +1,214 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block content %}
+    <div class="bg-white p-4 md:p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-bold mb-4">Order #{{ order.id }}</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+            <!-- Client Info Table -->
+            <div class="bg-gray-100 p-3 md:p-4 rounded">
+                <h3 class="text-lg font-semibold mb-2">Client Information</h3>
+                <table class="min-w-full bg-white">
+                    <tbody class="text-gray-600 text-sm">
+                    <tr>
+                        <td class="py-2 px-4 font-semibold">First Name:</td>
+                        <td class="py-2 px-4">{{ order.client.first_name }}</td>
+                    </tr>
+                    <tr>
+                        <td class="py-2 px-4 font-semibold">Last Name:</td>
+                        <td class="py-2 px-4">{{ order.client.last_name }}</td>
+                    </tr>
+                    <tr>
+                        <td class="py-2 px-4 font-semibold">Email:</td>
+                        <td class="py-2 px-4">{{ order.client.email }}</td>
+                    </tr>
+                    <tr>
+                        <td class="py-2 px-4 font-semibold">Phone:</td>
+                        <td class="py-2 px-4">{{ order.client.client_phone_number }}</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Address Info Table -->
+            <div class="bg-gray-100 p-3 md:p-4 rounded">
+                <h3 class="text-lg font-semibold mb-2">Address Information</h3>
+                <table class="min-w-full bg-white">
+                    <tbody class="text-gray-600 text-sm">
+                    <tr>
+                        <td class="py-2 px-4 font-semibold">City:</td>
+                        <td class="py-2 px-4">{{ address.city }}</td>
+                    </tr>
+                    <tr>
+                        <td class="py-2 px-4 font-semibold">ZIP Code:</td>
+                        <td class="py-2 px-4">{{ address.zip_code }}</td>
+                    </tr>
+                    <tr>
+                        <td class="py-2 px-4 font-semibold">Street:</td>
+                        <td class="py-2 px-4">{{ address.street }}</td>
+                    </tr>
+                    <tr>
+                        <td class="py-2 px-4 font-semibold">House Number:</td>
+                        <td class="py-2 px-4">{{ address.house_number }}</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Order Info Table -->
+            <div class="bg-gray-100 p-3 md:p-4 rounded">
+                <h3 class="text-lg font-semibold mb-2">Order Information</h3>
+                <table class="min-w-full bg-white">
+                    <tbody class="text-gray-600 text-sm">
+                    <tr>
+                        <td class="py-2 px-4 font-semibold">Created At:</td>
+                        <td class="py-2 px-4">{{ order.created_at|date:"Y-m-d H:i" }}</td>
+                    </tr>
+                    <tr>
+                        <td class="py-2 px-4 font-semibold">Delivery Option:</td>
+                        <td class="py-2 px-4">{{ order.delivery_option.delivery_option }}</td>
+                    </tr>
+                    {% if order.delivery_option %}
+                        <tr>
+                            <td class="py-2 px-4 font-semibold">Delivery Cost:</td>
+                            <td class="py-2 px-4">€{{ order.delivery_option.delivery_price|floatformat:2 }}</td>
+                        </tr>
+                    {% endif %}
+                    <tr>
+                        <td class="py-2 px-4 font-semibold">Payment Status:</td>
+                        <td class="py-2 px-4">
+                            <select class="bg-white border border-gray-300 rounded py-1 px-2" onchange="updateStatus(this, 'payment_status')">
+                                <option value="paid" {% if order.payment_status == 'paid' %}selected{% endif %}>Apmokėtas</option>
+                                <option value="not_paid" {% if order.payment_status == 'not_paid' %}selected{% endif %}>Neapmokėtas</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="py-2 px-4 font-semibold">Order Status:</td>
+                        <td class="py-2 px-4">
+                            <select class="bg-white border border-gray-300 rounded py-1 px-2" onchange="updateStatus(this, 'status')">
+                                {% for value, display in order.STATUS_CHOICES %}
+                                    <option value="{{ value }}" {% if order.status == value %}selected{% endif %}>
+                                        {{ display }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="py-2 px-4 font-semibold">Total Price:</td>
+                        <td class="py-2 px-4">€{{ order.total_price|floatformat:2 }}</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Ordered Items: Flowers and Decorations -->
+        <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+            <!-- Flowers List -->
+            <div>
+                <h3 class="text-lg font-semibold mb-4">Ordered Flowers</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white">
+                        <thead>
+                        <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                            <th class="py-3 px-6 text-left">Image</th>
+                            <th class="py-3 px-6 text-left">Item</th>
+                            <th class="py-3 px-6 text-left">Quantity</th>
+                            <th class="py-3 px-6 text-left hidden md:table-cell">Price</th> <!-- Hidden on small screens -->
+                            <th class="py-3 px-6 text-left">Total</th>
+                        </tr>
+                        </thead>
+                        <tbody class="text-gray-600 text-sm">
+                        {% for item in order_flower_items %}
+                            <tr class="border-b border-gray-200 hover:bg-gray-100">
+                                <td class="py-3 px-6">
+                                    {% if item.image_url %}
+                                        <img src="{{ item.image_url }}" alt="Flower Image" class="w-16 h-16 rounded">
+                                    {% else %}
+                                        <span class="text-gray-400">No Image</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3 px-6">{{ item.flower.color }} (Flower)</td>
+                                <td class="py-3 px-6">{{ item.quantity }}</td>
+                                <td class="py-3 px-6 hidden md:table-cell">€{{ item.price|floatformat:2 }}</td> <!-- Hidden on small screens -->
+                                <td class="py-3 px-6">€{{ item.total_price|floatformat:2 }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="5" class="py-3 px-6 text-center text-gray-500">
+                                    No flowers found in this order.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Decorations List -->
+            <div>
+                <h3 class="text-lg font-semibold mb-4">Ordered Decorations</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white">
+                        <thead>
+                        <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                            <th class="py-3 px-6 text-left">Image</th>
+                            <th class="py-3 px-6 text-left">Item</th>
+                            <th class="py-3 px-6 text-left">Quantity</th>
+                            <th class="py-3 px-6 text-left hidden md:table-cell">Price</th> <!-- Hidden on small screens -->
+                            <th class="py-3 px-6 text-left">Total</th>
+                        </tr>
+                        </thead>
+                        <tbody class="text-gray-600 text-sm">
+                        {% for item in order_decoration_items %}
+                            <tr class="border-b border-gray-200 hover:bg-gray-100">
+                                <td class="py-3 px-6">
+                                    {% if item.image_url %}
+                                        <img src="{{ item.image_url }}" alt="Decoration Image" class="w-16 h-16 rounded">
+                                    {% else %}
+                                        <span class="text-gray-400">No Image</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3 px-6">{{ item.decoration.color }} (Decoration)</td>
+                                <td class="py-3 px-6">{{ item.quantity }}</td>
+                                <td class="py-3 px-6 hidden md:table-cell">€{{ item.price|floatformat:2 }}</td> <!-- Hidden on small screens -->
+                                <td class="py-3 px-6">€{{ item.total_price|floatformat:2 }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="5" class="py-3 px-6 text-center text-gray-500">
+                                    No decorations found in this order.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateStatus(selectElement, fieldName) {
+            const selectedValue = selectElement.value;
+            const formData = new FormData();
+            formData.append(fieldName, selectedValue);
+
+            fetch(window.location.href, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        alert('Failed to update the status.');
+                    }
+                });
+        }
+    </script>
+{% endblock %}

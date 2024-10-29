@@ -31,13 +31,13 @@ class Decorations(models.Model):
         return f" ({self.color}) - ${self.price}"
 
 
-class Materials(models.Model):
-    name = models.CharField(verbose_name='Color', max_length=50)
+class WrappingPaper(models.Model):
+    color = models.CharField(verbose_name='Color', max_length=50)
     remaining = models.FloatField(verbose_name='Remaining', default=0)
-    price = models.DecimalField(verbose_name='Price', default=0.25, max_digits=10, decimal_places=2)
+    image = models.ImageField(upload_to='wrapping_paper/')
 
     def __str__(self):
-        return f'{self.name}'
+        return f'{self.color}'
 
 
 class Client(models.Model):
@@ -78,18 +78,38 @@ class Order(models.Model):
     decorations = models.ManyToManyField(Decorations, through='OrderDecoration', related_name='orders')
     created_at = models.DateTimeField(auto_now_add=True)
     delivery_option = models.ForeignKey(DeliveryOption, on_delete=models.CASCADE, null=True)
+    PAYMENT_CHOISES = [
+        ('neapmokėtas', 'Neapmokėtas'),
+        ('apmokėtas', 'Apmokėtas'),
+    ]
+    payment_status = models.CharField(max_length=20, choices=PAYMENT_CHOISES, default='neapmokėtas')
+    STATUS_CHOICES = [
+        ('vykdomas', 'Vykdomas'),
+        ('atsauktas', 'Atšauktas'),
+        ('issiustas', 'Išsiųstas'),
+        ('ivykdytas', 'Ivykdytas'),
+    ]
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='vykdomas',
+        verbose_name='Order Status'
+    )
 
     def __str__(self):
-        return f"Order #{self.id} for {self.client}"
+        return f"Order #{self.id} for {self.client} - Status: {self.get_status_display()}"
 
     def total_price(self):
         total = 0
-        # Add up flowers
+        # Add up prices for flowers
         for order_flower in self.orderflower_set.all():
             total += order_flower.flower.price * order_flower.quantity
-        # Add up decorations
+        # Add up prices for decorations
         for order_decoration in self.orderdecoration_set.all():
             total += order_decoration.decoration.price * order_decoration.quantity
+        # Add delivery price if available
+        if self.delivery_option:
+            total += self.delivery_option.delivery_price
         return total
 
 
@@ -140,6 +160,7 @@ class CartItem(models.Model):
         elif self.decoration:
             return self.decoration.price * self.quantity
         return 0
+
 
 class ContactUs(models.Model):
     name = models.CharField(max_length=100)

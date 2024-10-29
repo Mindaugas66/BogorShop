@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Flowers, Decorations, Materials, Order, Client, DecorationType, DeliveryOption, OrderDecoration, OrderFlower, Cart, CartItem, ContactUs
+from .models import Flowers, Decorations, Order, Client, DecorationType, DeliveryOption, OrderDecoration, OrderFlower, Cart, CartItem, ContactUs, WrappingPaper
 
 
 class FlowersAdmin(admin.ModelAdmin):
@@ -14,10 +14,8 @@ class DecorationAdmin(admin.ModelAdmin):
 class DecorationTypeAdmin(admin.ModelAdmin):
     list_display = ('decoration_type',)
 
-
-class MaterialsAdmin(admin.ModelAdmin):
-    list_display = ('name', 'remaining', 'price')
-
+class WrappingPaperAdmin(admin.ModelAdmin):
+    list_display = ('color', 'remaining', 'image')
 
 class ClientAdmin(admin.ModelAdmin):
     list_display = ('first_name', 'last_name', 'email', 'client_phone_number', 'client_address')
@@ -34,11 +32,14 @@ class DeliveryOptionAdmin(admin.ModelAdmin):
 class ContactUsAdmin(admin.ModelAdmin):
     list_display = ('name', 'email', 'message')
 
+class OrderAdmin(admin.ModelAdmin):
+    list_display = ('client', 'created_at', 'delivery_option', 'status', 'total_price')
+
 
 admin.site.register(Flowers, FlowersAdmin)
 admin.site.register(Decorations, DecorationAdmin)
-admin.site.register(Materials, MaterialsAdmin)
-admin.site.register(Order)
+admin.site.register(WrappingPaper, WrappingPaperAdmin)
+admin.site.register(Order, OrderAdmin)
 admin.site.register(OrderFlower)
 admin.site.register(OrderDecoration)
 admin.site.register(Client, ClientAdmin)

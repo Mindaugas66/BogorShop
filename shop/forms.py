@@ -1,5 +1,5 @@
 from django import forms
-from .models import Flowers, Client, Address, ContactUs
+from .models import Flowers, Client, Address, ContactUs, Decorations, WrappingPaper
 
 
 class FlowerSelectionForm(forms.Form):
@@ -50,6 +50,7 @@ class ClientForm(forms.ModelForm):
             ], attrs={'class': 'form-select'}),
         }
 
+
 class ContactUsForm(forms.ModelForm):
     class Meta:
         model = ContactUs
@@ -79,3 +80,48 @@ class CustomLoginForm(forms.Form):
     password = forms.CharField(
         widget=forms.PasswordInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg', 'placeholder': 'Password'})
     )
+
+
+class FlowersAdminForm(forms.ModelForm):
+    class Meta:
+        model = Flowers
+        fields = ['color', 'price', 'remaining', 'flower_img']
+
+    # Custom widgets to integrate with Tailwind
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['color'].widget.attrs.update({'class': 'w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500'})
+        self.fields['price'].widget.attrs.update({'class': 'w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500'})
+        self.fields['remaining'].widget.attrs.update({'class': 'w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500'})
+        self.fields['flower_img'].widget.attrs.update({'class': 'w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500'})
+
+
+class DecorationsAdminForm(forms.ModelForm):
+    class Meta:
+        model = Decorations
+        fields = ['type', 'color', 'price', 'remaining', 'image']
+        widgets = {
+            'type': forms.Select(attrs={'class': 'w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500'}),
+            'color': forms.TextInput(attrs={'class': 'w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500'}),
+            'price': forms.NumberInput(attrs={'class': 'w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500', 'step': '0.01'}),
+            'remaining': forms.NumberInput(attrs={'class': 'w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500'}),
+            'image': forms.ClearableFileInput(attrs={'class': 'w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500'}),
+        }
+        labels = {
+            'type': 'Decoration Type',
+            'color': 'Color',
+            'price': 'Price ($)',
+            'remaining': 'Remaining Stock',
+            'image': 'Decoration Image',
+        }
+
+
+class WrappingPaperAdminForm(forms.ModelForm):
+    class Meta:
+        model = WrappingPaper
+        fields = ['color', 'remaining', 'image']
+        widgets = {
+            'color': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter color'}),
+            'remaining': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter remaining stock'}),
+            'image': forms.ClearableFileInput(attrs={'class': 'form-control-file'}),
+        }

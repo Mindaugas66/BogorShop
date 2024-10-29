@@ -1,0 +1,148 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block content %}
+<div class="min-h-screen flex flex-col">
+    <!-- Content Header -->
+    <div class="container mx-auto p-6">
+        <!-- Flowers List -->
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-semibold text-gray-700">All Flowers</h2>
+            <div class="flex space-x-4">
+                <button onclick="openAddModal()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded text-sm">
+                    <i class="bi bi-plus-lg"></i> Add New Flower
+                </button>
+                <button onclick="openChangeAllPricesModal()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-sm">
+                    <i class="bi bi-currency-dollar"></i> Change All Prices
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-white shadow-md rounded p-4">
+            <table class="min-w-full table-auto">
+                <thead class="bg-gray-800 text-white">
+                    <tr>
+                        <th class="py-2 px-4 text-center">Flower Image</th>
+                        <th class="py-2 px-4 text-center">Color</th>
+                        <th class="py-2 px-4 text-center">Price ($)</th>
+                        <th class="py-2 px-4 text-center">Remaining</th>
+                        <th class="py-2 px-4 text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-700">
+                {% for flower in flowers %}
+                    <tr class="border-b">
+                        <td class="py-3 px-4 flex justify-center items-center">
+                            <img src="{{ flower.flower_img.url }}" alt="{{ flower.color }}" class="w-16 h-16 rounded shadow">
+                        </td>
+                        <td class="py-3 px-4 text-center">{{ flower.color }}</td>
+                        <td class="py-3 px-4 text-center">{{ flower.price }}</td>
+                        <td class="py-3 px-4 text-center">{{ flower.remaining }}</td>
+                        <td class="py-3 px-4 flex justify-center items-center">
+                            <div class="flex space-x-2">
+                                <!-- Edit Button with Icon Only, triggers edit modal -->
+                                <button onclick="openEditModal({{ flower.id }})" class="bg-yellow-500 hover:bg-yellow-600 text-white p-2 rounded-full" title="Edit">
+                                    <i class="bi bi-pencil-fill"></i>
+                                </button>
+                                <!-- Delete Button with Icon Only, link with delete_id in URL -->
+                                <a href="?delete_id={{ flower.id }}" class="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full" title="Delete" onclick="return confirm('Are you sure you want to delete this flower?');">
+                                    <i class="bi bi-trash-fill"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4">No flowers added yet.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Adding or Editing Flower -->
+<div id="add-flower-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+    <div class="bg-white w-1/3 p-6 rounded shadow-md relative">
+        <!-- Close Button in the Top-Right Corner -->
+        <button onclick="toggleModal(false)" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 1.5rem; cursor: pointer;">
+            &times;
+        </button>
+        
+        <h2 id="modal-title" class="text-xl font-semibold mb-4">Add New Flower</h2>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="add_flower" id="add_flower_input" value="1">
+            {{ form.as_p }}
+            <div class="flex justify-end space-x-4 mt-4">
+                <button type="button" onclick="toggleModal(false)" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded">Cancel</button>
+                <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Save Flower</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal for Changing All Prices -->
+<div id="change-all-prices-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+    <div class="bg-white w-1/3 p-6 rounded shadow-md relative">
+        <!-- Close Button in the Top-Right Corner -->
+        <button onclick="toggleModal(false, 'change-all-prices-modal')" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 1.5rem; cursor: pointer;">
+            &times;
+        </button>
+        
+        <h2 class="text-xl font-semibold mb-4">Change All Flower Prices</h2>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="change_all_prices" value="1">
+            <div class="mb-4">
+                <label class="block text-gray-700 mb-2" for="new_price">New Price ($)</label>
+                <input type="number" name="new_price" id="new_price" class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" step="0.01" required>
+            </div>
+            <div class="flex justify-end space-x-4">
+                <button type="button" onclick="toggleModal(false, 'change-all-prices-modal')" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded">Cancel</button>
+                <button type="submit" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Change Prices</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function toggleModal(open, modalId = 'add-flower-modal') {
+        const modal = document.getElementById(modalId);
+        if (open) {
+            modal.classList.remove('hidden');
+        } else {
+            modal.classList.add('hidden');
+        }
+    }
+
+    function openAddModal() {
+        document.getElementById('modal-title').innerText = 'Add New Flower';
+        document.getElementById('add_flower_input').value = '1';
+        toggleModal(true);
+    }
+
+    function openChangeAllPricesModal() {
+        toggleModal(true, 'change-all-prices-modal');
+    }
+
+    function openEditModal(flowerId) {
+        // Redirect with edit_id in query parameters to load the form with data
+        window.location.href = "?edit_id=" + flowerId;
+    }
+
+    function openEditModalOnPageLoad() {
+        // Get the query parameters from the URL
+        const params = new URLSearchParams(window.location.search);
+        if (params.has('edit_id')) {
+            // If edit_id is present, open the modal for editing
+            document.getElementById('modal-title').innerText = 'Edit Flower';
+            document.getElementById('add_flower_input').value = '0';  // Set to '0' for edit mode
+            toggleModal(true);
+        }
+    }
+
+    // Call function on page load to check for 'edit_id' and open the edit modal if necessary
+    window.onload = openEditModalOnPageLoad;
+</script>
+{% endblock %}

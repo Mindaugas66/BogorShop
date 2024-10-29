@@ -1,0 +1,113 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block content %}
+    <div class="bg-white p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-bold mb-4">Orders</h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white">
+                <thead>
+                <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                    <th class="py-3 px-6 text-left">Order</th>
+                    <th class="py-3 px-6 text-left">Date</th>
+                    <th class="py-3 px-6 text-left">Customer</th>
+                    <th class="py-3 px-6 text-left">Payment Status</th>
+                    <th class="py-3 px-6 text-left">Fulfillment Status</th>
+                    <th class="py-3 px-6 text-left">Total Price</th>
+                    <th class="py-3 px-6 text-center">Actions</th>
+                </tr>
+                </thead>
+                <tbody class="text-gray-600 text-sm">
+                {% for order in orders %}
+                    <tr class="border-b border-gray-200 hover:bg-gray-100">
+                        <!-- Order ID -->
+                        <td class="py-3 px-6">
+                            <a href="{% url 'shop:admin_order_detail' order.id %}" class="text-blue-500 hover:underline">
+                                #{{ order.id }}
+                            </a>
+                        </td>
+
+                        <!-- Order Date -->
+                        <td class="py-3 px-6">{{ order.created_at|date:"Y-m-d H:i" }}</td>
+
+                        <!-- Customer Name -->
+                        <td class="py-3 px-6">
+                            {{ order.client.first_name }} {{ order.client.last_name }}
+                        </td>
+
+                        <!-- Payment Status -->
+                        <td class="py-3 px-6">
+                            <div class="relative">
+                                <select class="appearance-none bg-green-500 text-white rounded-full py-1 px-3 cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-300"
+                                        style="background-color: {% if order.payment_status == 'paid' %}#28a745{% else %}#ffc107{% endif %};"
+                                        onchange="updateStatus(this, '{{ order.id }}', 'payment_status')">
+                                    <option value="paid" {% if order.payment_status == 'paid' %}selected{% endif %}>Apmokėtas</option>
+                                    <option value="not_paid" {% if order.payment_status == 'not_paid' %}selected{% endif %}>Neapmokėtas</option>
+                                </select>
+                            </div>
+                        </td>
+
+                        <!-- Fulfillment Status -->
+                        <td class="py-3 px-6">
+                            <div class="relative">
+                                <select class="appearance-none bg-blue-500 text-white rounded-full py-1 px-3 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-300"
+                                        style="background-color: {% if order.status == 'ivykdytas' %}#28a745{% elif order.status == 'vykdomas' %}#17a2b8{% elif order.status == 'atsauktas' %}#dc3545{% else %}#ffc107{% endif %};"
+                                        onchange="updateStatus(this, '{{ order.id }}', 'status')">
+                                    {% for value, display in order.STATUS_CHOICES %}
+                                        <option value="{{ value }}" {% if order.status == value %}selected{% endif %}>
+                                            {{ display }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </td>
+
+                        <!-- Total Price -->
+                        <td class="py-3 px-6">€{{ order.total_price|floatformat:2 }}</td>
+
+                        <!-- Actions -->
+                        <td class="py-3 px-6 text-center">
+                            <a href="{% url 'shop:admin_order_detail' order.id %}" class="inline-block px-4 py-2 border border-gray-300 rounded hover:bg-gray-100 transition">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7" class="py-3 px-6 text-center text-gray-500">
+                            No orders found.
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function updateStatus(selectElement, orderId, fieldName) {
+            const selectedValue = selectElement.value;
+            const formData = new FormData();
+            formData.append(fieldName, selectedValue);
+            formData.append('order_id', orderId);
+
+            fetch(`/adminas/order/${orderId}/`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        alert('Failed to update the status.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating status:', error);
+                    alert('An error occurred while updating the status.');
+                });
+        }
+    </script>
+{% endblock %}

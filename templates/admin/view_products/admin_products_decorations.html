@@ -1,0 +1,190 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block content %}
+    <div class="min-h-screen flex flex-col">
+        <!-- Content Header with Tabs -->
+        <div class="container mx-auto p-6 bg-white">
+            <!-- Tabs for Switching Between Decorations and Decoration Types -->
+            <nav class="flex flex-col sm:flex-row border-b">
+                <button id="tab-decorations" onclick="switchTab('decorations')" class="tab-button text-gray-600 py-4 px-6 block hover:text-blue-500 focus:outline-none">
+                    Decorations
+                </button>
+                <button id="tab-decoration-types" onclick="switchTab('decoration-types')" class="tab-button text-gray-600 py-4 px-6 block hover:text-blue-500 focus:outline-none">
+                    Decoration Types
+                </button>
+            </nav>
+
+            <!-- Decorations Section -->
+            <div id="decorations-section" class="tab-content mt-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-semibold text-gray-700">All Decorations</h2>
+                    <button onclick="openAddModal()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded text-sm">
+                        <i class="bi bi-plus-lg"></i> Add New Decoration
+                    </button>
+                </div>
+                <div class="bg-white shadow-md rounded p-4">
+                    <table class="min-w-full table-auto">
+                        <thead class="bg-gray-800 text-white">
+                        <tr>
+                            <th class="py-2 px-4 text-center">Decoration Image</th>
+                            <th class="py-2 px-4 text-center">Color</th>
+                            <th class="py-2 px-4 text-center">Price ($)</th>
+                            <th class="py-2 px-4 text-center">Remaining</th>
+                            <th class="py-2 px-4 text-center">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody class="text-gray-700">
+                        {% for decoration in decorations %}
+                            <tr class="border-b">
+                                <td class="py-3 px-4 flex justify-center items-center">
+                                    <img src="{{ decoration.image.url }}" alt="{{ decoration.color }}" class="w-16 h-16 rounded shadow">
+                                </td>
+                                <td class="py-3 px-4 text-left leading-normal">{{ decoration.color }}</td>
+                                <td class="py-3 px-4 text-center">{{ decoration.price }}</td>
+                                <td class="py-3 px-4 text-center">{{ decoration.remaining }}</td>
+                                <td class="py-3 px-4 flex justify-center items-center">
+                                    <div class="flex space-x-2">
+                                        <!-- Edit Button -->
+                                        <button onclick="openEditModal({{ decoration.id }})" class="bg-yellow-500 hover:bg-yellow-600 text-white p-2 rounded-full" title="Edit">
+                                            <i class="bi bi-pencil-fill"></i>
+                                        </button>
+                                        <!-- Delete Button -->
+                                        <a href="{% url 'shop:delete_decoration' decoration.id %}" class="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full" title="Delete" onclick="return confirm('Are you sure you want to delete this decoration?');">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4">No decorations added yet.</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Include Decoration Types HTML -->
+            {% include 'admin/view_products/admin_products_decoration_types.html' %}
+        </div>
+    </div>
+
+    <!-- Add/Edit Decoration Modal -->
+    <div id="add-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white p-6 rounded shadow-md w-96">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="modal-title" class="text-xl font-semibold">Add New Decoration</h2>
+                <button onclick="closeAddModal()" class="text-gray-500">&times;</button>
+            </div>
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" id="edit-id" name="edit_id">
+
+                <!-- Decoration Type Selector -->
+                <div class="mb-4">
+                    <label for="id_decoration_type" class="block text-gray-700 font-medium mb-2">Decoration Type</label>
+                    <select name="type" id="id_decoration_type" class="w-full p-3 border border-gray-300 rounded">
+                        <option value="">Select a type</option>
+                        {% for type in decoration_types %}
+                            <option value="{{ type.id }}">{{ type.decoration_type }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label for="id_color" class="block text-gray-700 font-medium mb-2">Color</label>
+                    <input type="text" name="color" id="id_color" class="w-full p-3 border border-gray-300 rounded" placeholder="Enter color">
+                </div>
+                <div class="mb-4">
+                    <label for="id_price" class="block text-gray-700 font-medium mb-2">Price</label>
+                    <input type="number" name="price" id="id_price" class="w-full p-3 border border-gray-300 rounded" placeholder="Enter price">
+                </div>
+                <div class="mb-4">
+                    <label for="id_remaining" class="block text-gray-700 font-medium mb-2">Remaining Stock</label>
+                    <input type="number" name="remaining" id="id_remaining" class="w-full p-3 border border-gray-300 rounded" placeholder="Enter remaining stock">
+                </div>
+
+                <!-- Image Upload Field -->
+                <div class="mb-4">
+                    <label for="id_image" class="block text-gray-700 font-medium mb-2">Decoration Image</label>
+                    <input type="file" name="image" id="id_image" class="w-full p-3 border border-gray-300 rounded">
+                </div>
+
+                <div class="flex justify-end space-x-2 mt-4">
+                    <button type="button" onclick="closeAddModal()" class="bg-gray-500 text-white px-4 py-2 rounded">Cancel</button>
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded" name="add_decoration">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Custom CSS for Tab Underline -->
+    <style>
+        .tab-button.active {
+            border-bottom: 2px solid #3b82f6; /* Tailwind's blue-500 */
+            color: #3b82f6; /* Tailwind's blue-500 */
+            font-weight: 500;
+        }
+    </style>
+
+    <!-- JavaScript for Tab Switching and Modal Control -->
+    <script>
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(function (tabContent) {
+                tabContent.classList.add('hidden');
+            });
+
+            // Remove active styles from all tabs
+            document.querySelectorAll('.tab-button').forEach(function (tab) {
+                tab.classList.remove('active');
+                tab.classList.add('text-gray-600');
+            });
+
+            // Show the selected tab and set the active styles
+            if (tabName === 'decorations') {
+                document.getElementById('decorations-section').classList.remove('hidden');
+                document.getElementById('tab-decorations').classList.add('active');
+            } else if (tabName === 'decoration-types') {
+                document.getElementById('decoration-types-section').classList.remove('hidden');
+                document.getElementById('tab-decoration-types').classList.add('active');
+            }
+        }
+
+        // Default to showing decorations tab on load
+        window.onload = function () {
+            switchTab('decorations');
+        }
+
+        function openAddModal() {
+            document.getElementById('add-modal').classList.remove('hidden');
+            document.getElementById('modal-title').innerText = "Add New Decoration";
+            document.getElementById('edit-id').value = ''; // Clear edit ID
+            document.getElementById('id_decoration_type').value = ''; // Clear type selector
+            document.getElementById('id_color').value = '';
+            document.getElementById('id_price').value = '';
+            document.getElementById('id_remaining').value = '';
+            document.getElementById('id_image').value = ''; // Clear image upload
+        }
+
+        function closeAddModal() {
+            document.getElementById('add-modal').classList.add('hidden');
+        }
+
+        function openEditModal(decorationId) {
+            fetch(`/adminas/products/decoration/${decorationId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('add-modal').classList.remove('hidden');
+                    document.getElementById('modal-title').innerText = "Edit Decoration";
+                    document.getElementById('id_decoration_type').value = data.type;
+                    document.getElementById('id_color').value = data.color;
+                    document.getElementById('id_price').value = data.price;
+                    document.getElementById('id_remaining').value = data.remaining;
+                    document.getElementById('edit-id').value = data.id;
+                })
+                .catch(error => console.error('Error fetching decoration data:', error));
+        }
+    </script>
+{% endblock %}

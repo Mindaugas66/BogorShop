@@ -1,0 +1,136 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block content %}
+    <div class="min-h-screen flex flex-col">
+        <!-- Content Header with Title and Button -->
+        <div class="container mx-auto p-6 bg-white">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-semibold text-gray-700">All Wrapping Papers</h2>
+                <button onclick="openAddModal()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-sm">
+                    <i class="bi bi-plus-lg"></i> Add New Wrapping Paper
+                </button>
+            </div>
+
+            <!-- Wrapping Paper Table -->
+            <div class="bg-white shadow-md rounded p-4">
+                <table class="min-w-full table-auto">
+                    <thead class="bg-gray-800 text-white">
+                    <tr>
+                        <th class="py-2 px-4 text-center">Wrapping Paper Image</th>
+                        <th class="py-2 px-4 text-center">Color</th>
+                        <th class="py-2 px-4 text-center">Price ($)</th>
+                        <th class="py-2 px-4 text-center">Remaining</th>
+                        <th class="py-2 px-4 text-center">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody class="text-gray-700">
+                    {% for wrapping_paper in wrapping_papers %}
+                        <tr class="border-b">
+                            <td class="py-3 px-4 flex justify-center items-center">
+                                <img src="{{ wrapping_paper.image.url }}" alt="{{ wrapping_paper.color }}" class="w-16 h-16 rounded shadow">
+                            </td>
+                            <td class="py-3 px-4 text-left">
+                                <div class="flex items-center h-full">{{ wrapping_paper.color }}</div>
+                            </td>
+                            <td class="py-3 px-4 text-center">{{ wrapping_paper.price }}</td>
+                            <td class="py-3 px-4 text-center">{{ wrapping_paper.remaining }}</td>
+                            <td class="py-3 px-4 flex justify-center items-center">
+                                <div class="flex space-x-2">
+                                    <!-- Edit Button -->
+                                    <button onclick="openEditModal({{ wrapping_paper.id }})" class="bg-yellow-500 hover:bg-yellow-600 text-white p-2 rounded-full" title="Edit">
+                                        <i class="bi bi-pencil-fill"></i>
+                                    </button>
+                                    <!-- Delete Button -->
+                                    <a href="?delete_wrapping_paper_id={{ wrapping_paper.id }}" class="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full" title="Delete" onclick="return confirm('Are you sure you want to delete this wrapping paper?');">
+                                        <i class="bi bi-trash-fill"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4">No wrapping papers added yet.</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Add Modal -->
+        <div id="add-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
+            <div class="bg-white p-6 rounded shadow-md w-96">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 id="modal-title" class="text-xl font-semibold">Add New Wrapping Paper</h2>
+                    <button onclick="closeAddModal()" class="text-gray-500">&times;</button>
+                </div>
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" id="edit-id" name="edit_id">
+                    <div class="mb-4">
+                        <label for="id_color" class="block text-gray-700 font-medium mb-2">Color</label>
+                        <input type="text" name="color" id="id_color" class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:border-blue-500" placeholder="Enter color">
+                    </div>
+                    <div class="mb-4">
+                        <label for="id_remaining" class="block text-gray-700 font-medium mb-2">Remaining Stock</label>
+                        <input type="number" name="remaining" id="id_remaining" class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:border-blue-500" placeholder="Enter remaining stock">
+                    </div>
+                    <div class="mb-4">
+                        <label for="id_image" class="block text-gray-700 font-medium mb-2">Wrapping Paper Image</label>
+                        <input type="file" name="image" id="id_image" class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div class="flex justify-end space-x-2 mt-4">
+                        <button type="button" onclick="closeAddModal()" class="bg-gray-500 text-white px-4 py-2 rounded">Cancel</button>
+                        <button type="submit" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Save Wrapping Paper</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript for Add and Edit Modal -->
+    <script>
+        function openAddModal() {
+            document.getElementById('add-modal').classList.remove('hidden');
+        }
+
+        function closeAddModal() {
+            document.getElementById('add-modal').classList.add('hidden');
+        }
+
+        function openEditModal(wrappingPaperId) {
+            // Logic to handle editing will require pre-filling the form data and showing a modal
+            console.log("Open Edit Modal for Wrapping Paper ID:", wrappingPaperId);
+        }
+
+        function openAddModal() {
+            // Open the modal to add a new wrapping paper
+            document.getElementById('add-modal').classList.remove('hidden');
+            document.getElementById('modal-title').innerText = "Add New Wrapping Paper";
+            document.getElementById('id_color').value = '';
+            document.getElementById('id_remaining').value = '';
+            document.getElementById('id_image').value = '';
+            document.getElementById('edit-id').value = '';
+        }
+
+        function closeAddModal() {
+            // Close the modal
+            document.getElementById('add-modal').classList.add('hidden');
+        }
+
+        function openEditModal(wrappingPaperId) {
+            fetch(`/adminas/products/wrappingpaper/${wrappingPaperId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('add-modal').classList.remove('hidden');
+                    document.getElementById('modal-title').innerText = "Edit Wrapping Paper";
+                    document.getElementById('id_color').value = data.color;
+                    document.getElementById('id_remaining').value = data.remaining;
+                    document.getElementById('edit-id').value = data.id;
+                })
+                .catch(error => {
+                    console.error('Error fetching wrapping paper data:', error);
+                });
+        }
+    </script>
+{% endblock %}

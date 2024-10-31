@@ -33,24 +33,12 @@ def flower(request):
     # Fetch decoration categories
     decoration_types = DecorationType.objects.filter(id__in=[1, 4, 6])
 
-    # Detect if the request is from a mobile device
-    is_mobile = any(agent in request.META['HTTP_USER_AGENT'].lower() for agent in MOBILE_USER_AGENTS)
-
-    if is_mobile:
-        # Render the mobile version of the page
-        return render(request, 'bouquet/flowers_mobile.html', {
-            'flowers_data': flowers_data,
-            'first_product': first_product,
-            'decoration_types': decoration_types,  # Pass the decoration categories
-
-        })
-    else:
-        # Render the desktop version of the page with decoration categories
-        return render(request, 'bouquet/flowers_desktop.html', {
-            'flowers_data': flowers_data,
-            'first_product': first_product,
-            'decoration_types': decoration_types,  # Pass the decoration categories
-        })
+    # Render a single template for both mobile and desktop
+    return render(request, 'bouquet/flowers.html', {
+        'flowers_data': flowers_data,
+        'first_product': first_product,
+        'decoration_types': decoration_types,  # Pass the decoration categories
+    })
 
 
 def decoration(request):

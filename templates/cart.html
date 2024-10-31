@@ -72,14 +72,6 @@
                         </p>
                     </div>
                 </div>
-
-                <!-- Clear Cart Button Next to Total -->
-                <form action="{% url 'shop:clear_cart' %}" method="post" class="ml-4">
-                    {% csrf_token %}
-                    <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-red-600">
-                        Išvalyti Krepšelį
-                    </button>
-                </form>
             </div>
 
             <!-- Checkout Button -->

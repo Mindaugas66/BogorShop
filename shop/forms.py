@@ -3,12 +3,12 @@ from .models import Flowers, Client, Address, ContactUs, Decorations, WrappingPa
 
 
 class FlowerSelectionForm(forms.Form):
-    """A form for selecting flowers and their quantities."""
+    """A form for selecting flowers, their quantities, and wrapping paper."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Dynamically add fields for each available flower
+        # Dynamic flower quantity fields
         flowers = Flowers.objects.all()
         for flower in flowers:
             self.fields[f'flower_{flower.id}_quantity'] = forms.IntegerField(
@@ -21,6 +21,14 @@ class FlowerSelectionForm(forms.Form):
                 initial=flower.id,
                 widget=forms.HiddenInput()
             )
+
+        # Wrapping paper selection field
+        wrapping_papers = WrappingPaper.objects.all()
+        self.fields['wrapping_paper_id'] = forms.ChoiceField(
+            choices=[(wp.id, wp.color) for wp in wrapping_papers],
+            label='Choose Wrapping Paper',
+            required=True
+        )
 
 
 class AddressForm(forms.ModelForm):

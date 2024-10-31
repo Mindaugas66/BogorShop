@@ -3,7 +3,7 @@
 
 {% block content %}
     <!-- Bouquet and Grid Container -->
-    <div class="bg-[#8F6D75] p-6 rounded-lg border-4 border-[#734F59] mb-12">
+    <div class="bg-[#8F6D75] p-6 rounded-lg border-4 border-[#734F59] mb-4">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
             <!-- Left Section: Bouquet Image -->
             <div class="w-full flex justify-center items-center">
@@ -21,6 +21,9 @@
 
                     <!-- Simple Grid Container for Flowers -->
                     <a class="text-sm text-white my-3">Pasirinkite norimas spalvas bei norima gėlių kiekį:</a>
+                    <div class="pt-3">
+                        <a class="text-sm text-white italic">DĖMESIO! Gėlių spalvos nuotraukose ir realybėje gali šiek tiek skirtis.</a>
+                    </div>
                     <div class="grid gap-3 pt-3" style="grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));">
                         {% for flower in flowers_data %}
                             <div class="p-4 rounded-lg shadow-md flex flex-col items-center">
@@ -49,14 +52,26 @@
                             </div>
                         {% endfor %}
                     </div>
+
+                    <!-- Wrapping Paper Selection -->
                     <div class="pt-3">
-                        <a class="text-sm text-white italic">DĖMESIO! Gėlių spalvos nuotraukose ir realybėje gali šiek tiek skirtis.</a>
+                        <label class="text-sm text-white italic mb-2 block">Pasirinkite vyniojimo popierių:</label>
+                        <!-- Responsive grid for wrapping papers -->
+                        <div class="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 gap-4 pt-4">
+                            {% for paper in wrapping_papers %}
+                                <div class="flex justify-center">
+                                    <img src="{{ paper.image.url }}" alt="Wrapping Paper {{ paper.color }}"
+                                         class="object-cover object-center rounded-md cursor-pointer transition-transform duration-300 hover:scale-105 wrapping-paper"
+                                         style="width: 80px; height: 80px;"
+                                         onclick="selectWrappingPaper('{{ paper.id }}', this)">
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <input type="hidden" id="selected-wrapping-paper" name="wrapping_paper_id" required>
                     </div>
 
-
-                    <!-- Add to Cart Button with Total Price -->
                     <div class="mt-8">
-                        <button type="submit" class="bg-[#734F59] text-white rounded-lg w-full py-3 hover:bg-[#5a3b45] focus:ring-2 focus:ring-[#734F59]">
+                        <button type="submit" onclick="return validateForm()" class="bg-[#734F59] text-white rounded-lg w-full py-3 hover:bg-[#5a3b45] focus:ring-2 focus:ring-[#734F59]">
                             <span id="total-price">0.00€</span> Pridėti į krepšelį
                         </button>
                     </div>
@@ -64,8 +79,7 @@
             </div>
         </div>
     </div>
-
-    <div class="bg-[#8F6D75] p-6 rounded-lg border-4 border-[#734F59] mb-12">
+    <div class="bg-[#8F6D75] p-6 rounded-lg border-4 border-[#734F59] mb-4">
         <h2 class="text-2xl font-bold text-white mb-4">Dekoracijos:</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {% for decoration_type in decoration_types|slice:":3" %}
@@ -113,26 +127,30 @@
             </div>
         </div>
     </div>
-
     <style>
         .quantity-input {
-            width: 2.5rem; /* Reduce the width of the quantity input */
+            width: 2.5rem;
         }
 
         .decrement-button, .increment-button {
-            padding: 0.25rem; /* Adjust padding to create enough space */
-            width: 2rem; /* Same height and width to make them circular */
+            padding: 0.25rem;
+            width: 2rem;
             height: 2rem;
             display: flex;
-            align-items: center; /* Center vertically */
-            justify-content: center; /* Center horizontally */
-            font-size: 1rem; /* Adjust font size for the icons */
-            line-height: 1; /* Ensure line height doesn’t affect centering */
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            line-height: 1;
         }
 
-        .decrement-button svg, .increment-button svg {
-            width: 2rem; /* Control the size of the icon */
-            height: 1rem;
+        /* Default image style */
+        .wrapping-paper {
+            border: 2px solid transparent;
+        }
+
+        /* Selected border style */
+        .wrapping-paper.selected {
+            border: 4px solid #734F59; /* Thicker border, adjust color as needed */
         }
     </style>
 
@@ -140,6 +158,28 @@
         function changeBouquetImage(newImageUrl) {
             const bouquetImgElement = document.getElementById('bouquet-img');
             bouquetImgElement.src = newImageUrl;
+        }
+
+        function selectWrappingPaper(id, element) {
+            // Clear previous selections
+            document.querySelectorAll('.wrapping-paper').forEach(img => img.classList.remove('selected'));
+
+            // Add selected class to the clicked image
+            element.classList.add('selected');
+
+            // Update the hidden input with the selected wrapping paper id
+            document.getElementById('selected-wrapping-paper').value = id;
+        }
+
+        function validateForm() {
+            const wrappingPaperId = document.getElementById('selected-wrapping-paper').value;
+
+            if (!wrappingPaperId) {
+                alert('Prašome pasirinkti vyniojimo popierių prieš pridedant į krepšelį.');
+                return false; // Prevent form submission
+            }
+
+            return true; // Allow form submission if wrapping paper is selected
         }
 
         document.addEventListener('DOMContentLoaded', function () {
@@ -175,50 +215,9 @@
                 });
             });
 
-            // Also update total price when input is manually changed
+            // Update total price when input is manually changed
             document.querySelectorAll('.quantity-input').forEach(function (input) {
                 input.addEventListener('input', calculateTotalPrice);
-            });
-
-            // Carousel Functionality
-            const carouselWrapper = document.getElementById('carousel-wrapper');
-            const prevButton = document.querySelector('.prev');
-            const nextButton = document.querySelector('.next');
-
-            let scrollAmount = 0;
-            const scrollStep = 300; // Adjust for smooth scrolling
-
-            // Next button functionality
-            nextButton.addEventListener('click', function () {
-                carouselWrapper.scrollBy({left: scrollStep, behavior: 'smooth'});
-            });
-
-            // Previous button functionality
-            prevButton.addEventListener('click', function () {
-                carouselWrapper.scrollBy({left: -scrollStep, behavior: 'smooth'});
-            });
-
-            // Swipe functionality
-            let touchStartX = 0;
-
-            carouselWrapper.addEventListener('touchstart', function (event) {
-                touchStartX = event.touches[0].clientX;
-            });
-
-            carouselWrapper.addEventListener('touchmove', function (event) {
-                if (!touchStartX) return;
-                let touchEndX = event.touches[0].clientX;
-                let swipeDistance = touchEndX - touchStartX;
-
-                if (swipeDistance > 50) {
-                    // Swipe right
-                    prevButton.click();
-                    touchStartX = 0;
-                } else if (swipeDistance < -50) {
-                    // Swipe left
-                    nextButton.click();
-                    touchStartX = 0;
-                }
             });
         });
     </script>

@@ -64,14 +64,12 @@
             </div>
 
             <!-- Delivery Option Section with Button Design -->
-            <!-- Delivery Option Section with Button Design -->
             <div class="mb-6">
                 <h2 class="text-2xl font-semibold text-gray-700 mb-4">Pristatymo Būdas:</h2>
-
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
                     {% for option in delivery_options %}
                         <div class="delivery-option relative" data-option-id="{{ option.id }}">
-                            <input type="radio" name="delivery_option" id="option_{{ option.id }}" value="{{ option.id }}" class="hidden" required>
+                            <input type="radio" name="delivery_option" id="option_{{ option.id }}" value="{{ option.id }}" data-price="{{ option.delivery_price }}" class="hidden" required>
                             <label for="option_{{ option.id }}" class="block p-4 border border-gray-300 rounded-lg cursor-pointer transition duration-200 ease-in-out relative">
                                 <!-- Delivery option name -->
                                 <div class="text-lg font-semibold delivery-text">{{ option.delivery_option }}</div>
@@ -112,7 +110,66 @@
                     <label for="bank_transfer" class="ml-3 block text-sm font-medium text-gray-700">Bankinis Pavedimas</label>
                 </div>
             </div>
+            <div class="mb-4 bg-gray-100 p-4 rounded-lg shadow-md">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-4">Jūsų Krepšelis</h2>
 
+                <div class="grid grid-cols-1 gap-4 mb-4">
+                    {% for item in cart_items %}
+                        <div class="flex items-center bg-white p-3 rounded-lg shadow-md">
+                            {% if item.wrapping_paper %}
+                                <!-- Wrapping Paper -->
+                                <img src="{{ item.wrapping_paper.image.url }}" alt="{{ item.wrapping_paper.color }}" class="w-16 h-16 object-cover rounded-md mr-4">
+                                <div>
+                                    <p class="text-lg font-bold text-gray-800">{{ item.wrapping_paper.color }}</p>
+                                    <p class="text-sm text-gray-600">Vyniojimo popierius</p>
+                                </div>
+                            {% elif item.decoration %}
+                                <!-- Decoration -->
+                                <img src="{{ item.decoration.image.url }}" alt="{{ item.decoration.color }}" class="w-16 h-16 object-cover rounded-md mr-4">
+                                <div>
+                                    <p class="text-lg font-bold text-gray-800">{{ item.decoration.type.decoration_type }} - {{ item.decoration.color }}</p>
+                                    <p class="text-sm text-gray-600">Kaina: ${{ item.total_price|floatformat:2 }}</p>
+                                    <p class="text-sm text-gray-600">Kiekis: {{ item.quantity }}</p>
+                                </div>
+                            {% else %}
+                                <!-- Flower -->
+                                <img src="{{ item.flower.flower_img.url }}" alt="{{ item.flower.color }}" class="w-16 h-16 object-cover rounded-md mr-4">
+                                <div>
+                                    <p class="text-lg font-bold text-gray-800">{{ item.flower.color }}</p>
+                                    <p class="text-sm text-gray-600">Kaina: ${{ item.total_price|floatformat:2 }}</p>
+                                    <p class="text-sm text-gray-600">Kiekis: {{ item.quantity }}</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Pricing Summary -->
+                <div class="flex justify-between items-center border-t pt-4 mt-4">
+                    <p class="text-lg font-semibold text-gray-700">Prekių suma:</p>
+                    <p class="text-lg font-semibold text-gray-800">${{ cart_total|floatformat:2 }}</p>
+                </div>
+                <div class="flex justify-between items-center">
+                    <p class="text-lg font-semibold text-gray-700">Pristatymo kaina:</p>
+                    <p id="delivery-price" class="text-lg font-semibold text-gray-800">
+                        {% if selected_delivery_option %}
+                            ${{ selected_delivery_option.delivery_price|floatformat:2 }}
+                        {% else %}
+                            Pasirinkite pristatymo būdą
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="flex justify-between items-center border-t pt-4">
+                    <p class="text-lg font-semibold text-gray-800">Bendra suma:</p>
+                    <p id="total-price" class="text-xl font-bold text-gray-900">
+                        {% if selected_delivery_option %}
+                            ${{ cart_total|add:selected_delivery_option.delivery_price|floatformat:2 }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
             <!-- Submit Button -->
             <div class="mt-4">
                 <button type="submit" class="w-full bg-indigo-600 text-white px-6 py-3 rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
@@ -124,7 +181,6 @@
 
 
     <script>
-
         function toggleDescription(id) {
             const description = document.getElementById(`description_${id}`);
             if (description) {
@@ -135,6 +191,9 @@
 
         document.addEventListener("DOMContentLoaded", function () {
             const deliveryOptions = document.querySelectorAll('.delivery-option');
+            const deliveryPriceElement = document.querySelector("#delivery-price");
+            const totalPriceElement = document.querySelector("#total-price");
+            const cartTotal = parseFloat("{{ cart_total|floatformat:2 }}");
 
             deliveryOptions.forEach(option => {
                 const input = option.querySelector('input[type="radio"]');
@@ -151,9 +210,14 @@
                     option.querySelector('.delivery-text').classList.add('text-white');
                     option.querySelector('.delivery-price').classList.add('text-white');
                     option.querySelector('label').classList.add('bg-indigo-500', 'border-indigo-500', 'text-white');
+
+                    // Update delivery and total prices
+                    const deliveryPrice = parseFloat(input.getAttribute('data-price'));
+                    deliveryPriceElement.textContent = `$${deliveryPrice.toFixed(2)}`;
+                    totalPriceElement.textContent = `$${(cartTotal + deliveryPrice).toFixed(2)}`;
                 });
 
-                // Set the initially checked option (in case one is pre-selected)
+                // Set the initially checked option
                 if (input.checked) {
                     option.querySelector('.delivery-text').classList.add('text-white');
                     option.querySelector('.delivery-price').classList.add('text-white');

@@ -3,13 +3,13 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.cache import never_cache
 from django.views.decorators.cache import cache_control
-from .models import Flowers, Decorations, DecorationType, CartItem, DeliveryOption, OrderFlower, OrderDecoration, Order, WrappingPaper
+from .models import Flowers, Decorations, DecorationType, CartItem, DeliveryOption, OrderFlower, OrderDecoration, Order, WrappingPaper, OrderWrappingPaper
 from django.contrib import messages
 from django.shortcuts import render, redirect
 from .forms import ClientForm, AddressForm, ContactUsForm, CustomLoginForm, FlowersAdminForm, DecorationsAdminForm, WrappingPaperAdminForm
 from .utils import get_or_create_cart
 from django.contrib.auth import authenticate, login
-from django.db.models import Sum
+from .forms import FlowerSelectionForm
 
 
 def index(request):
@@ -29,15 +29,17 @@ MOBILE_USER_AGENTS = ['Android', 'iPhone', 'BlackBerry', 'Opera Mini', 'Windows 
 def flower(request):
     flowers_data = Flowers.objects.all()
     first_product = flowers_data.first()
-
-    # Fetch decoration categories
     decoration_types = DecorationType.objects.filter(id__in=[1, 4, 6])
+    wrapping_papers = WrappingPaper.objects.all()  # Query wrapping paper objects
 
-    # Render a single template for both mobile and desktop
+    form = FlowerSelectionForm()
+
     return render(request, 'bouquet/flowers.html', {
         'flowers_data': flowers_data,
         'first_product': first_product,
-        'decoration_types': decoration_types,  # Pass the decoration categories
+        'decoration_types': decoration_types,
+        'form': form,
+        'wrapping_papers': wrapping_papers  # Pass wrapping papers to the template
     })
 
 
@@ -102,7 +104,7 @@ def delivery(request):
 
 # views.py
 def add_to_cart(request):
-    """Handle adding flowers or decorations to the cart."""
+    """Handle adding flowers, decorations, and wrapping paper to the cart."""
     cart = get_or_create_cart(request)
 
     if request.method == 'POST':
@@ -115,14 +117,23 @@ def add_to_cart(request):
             quantity = int(quantity)
             if quantity > 0:
                 cart_item, created = CartItem.objects.get_or_create(
-                    cart=cart, flower=flower, decoration=None
+                    cart=cart, flower=flower, decoration=None, wrapping_paper=None
                 )
-                # Set the quantity directly rather than incrementing
                 if created:
                     cart_item.quantity = quantity
                 else:
                     cart_item.quantity += quantity
                 cart_item.save()
+
+        # Add wrapping paper to the cart
+        wrapping_paper_id = request.POST.get('wrapping_paper_id')
+        if wrapping_paper_id:
+            wrapping_paper = WrappingPaper.objects.get(id=wrapping_paper_id)
+            cart_item, created = CartItem.objects.get_or_create(
+                cart=cart, flower=None, decoration=None, wrapping_paper=wrapping_paper
+            )
+            cart_item.quantity = 1  # Assuming one wrapping paper per cart
+            cart_item.save()
 
         # Add decorations to the cart
         decoration_ids = request.POST.getlist('decoration_id[]')
@@ -133,9 +144,8 @@ def add_to_cart(request):
             quantity = int(quantity)
             if quantity > 0:
                 cart_item, created = CartItem.objects.get_or_create(
-                    cart=cart, flower=None, decoration=decoration
+                    cart=cart, flower=None, decoration=decoration, wrapping_paper=None
                 )
-                # Set the quantity directly rather than incrementing
                 if created:
                     cart_item.quantity = quantity
                 else:
@@ -143,7 +153,6 @@ def add_to_cart(request):
                 cart_item.save()
 
     return redirect('shop:cart')
-
 
 def update_cart(request):
     """Update item quantities in the cart."""
@@ -204,6 +213,11 @@ def checkout_view(request):
     """Handle order creation and checkout process."""
     cart = get_or_create_cart(request)
     cart_items = cart.items.all()
+    cart_total = sum(item.quantity * item.flower.price for item in cart_items if item.flower) + \
+                 sum(item.quantity * item.decoration.price for item in cart_items if item.decoration)
+
+    selected_delivery_option = None
+    delivery_price = 0  # Default delivery price
 
     if request.method == 'POST':
         client_form = ClientForm(request.POST)
@@ -220,8 +234,9 @@ def checkout_view(request):
             # Capture selected delivery option
             delivery_option_id = request.POST.get('delivery_option')
             if delivery_option_id:
-                delivery_option = DeliveryOption.objects.get(id=delivery_option_id)
-                client.delivery_option = delivery_option
+                selected_delivery_option = DeliveryOption.objects.get(id=delivery_option_id)
+                client.delivery_option = selected_delivery_option
+                delivery_price = selected_delivery_option.delivery_price
 
             client.save()
 
@@ -236,6 +251,9 @@ def checkout_view(request):
                 elif cart_item.decoration:
                     # Add decorations to the order
                     OrderDecoration.objects.create(order=order, decoration=cart_item.decoration, quantity=cart_item.quantity)
+                elif cart_item.wrapping_paper:
+                    # Add wrapping paper to the order
+                    OrderWrappingPaper.objects.create(order=order, wrapping_paper=cart_item.wrapping_paper)
 
             # Clear the cart after order submission
             cart.items.all().delete()  # Remove all items from the cart
@@ -255,11 +273,18 @@ def checkout_view(request):
     # Get available delivery options
     delivery_options = DeliveryOption.objects.all()
 
+    # Calculate the total order price including delivery
+    total_order_price = cart_total + delivery_price
+
     return render(request, 'checkout/checkout.html', {
         'client_form': client_form,
         'address_form': address_form,
         'delivery_options': delivery_options,
-        'cart_items': cart_items
+        'cart_items': cart_items,
+        'cart_total': cart_total,
+        'selected_delivery_option': selected_delivery_option,
+        'delivery_price': delivery_price,
+        'total_order_price': total_order_price
     })
 
 

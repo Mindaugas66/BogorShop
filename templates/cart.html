@@ -33,7 +33,15 @@
 
                         <!-- Display item image and details -->
                         <div class="flex items-start">
-                            {% if item.decoration %}
+                            {% if item.wrapping_paper %}
+                                <!-- Display wrapping paper -->
+                                <img src="{{ item.wrapping_paper.image.url }}" alt="{{ item.wrapping_paper.color }}" class="w-16 h-16 object-cover rounded-md mr-4">
+                                <div>
+                                    <h2 class="text-lg font-bold text-gray-800">{{ item.wrapping_paper.color }}</h2>
+                                    <p class="text-sm text-gray-600">Vyniojimo popierius</p>
+                                </div>
+                            {% elif item.decoration %}
+                                <!-- Display decoration -->
                                 <img src="{{ item.decoration.image.url }}" alt="{{ item.decoration.color }} {{ item.decoration.type.decoration_type }}" class="w-16 h-16 object-cover rounded-md mr-4">
                                 <div>
                                     <h2 class="text-lg font-bold text-gray-800">{{ item.decoration.type.decoration_type }}</h2>
@@ -41,6 +49,7 @@
                                     <p class="text-sm text-gray-600">Kaina: ${{ item.total_price|floatformat:2 }}</p>
                                 </div>
                             {% else %}
+                                <!-- Display flower -->
                                 <img src="{{ item.flower.flower_img.url }}" alt="{{ item.flower.color }}" class="w-16 h-16 object-cover rounded-md mr-4">
                                 <div>
                                     <h2 class="text-lg font-bold text-gray-800">{{ item.flower.color }}</h2>
@@ -49,15 +58,17 @@
                             {% endif %}
                         </div>
 
-                        <!-- Quantity field positioned below, aligned right -->
-                        <div class="mt-2 flex justify-end">
-                            <form action="{% url 'shop:update_cart' %}" method="post" class="bg-white p-1 rounded-md">
-                                {% csrf_token %}
-                                <input type="hidden" name="item_id" value="{{ item.id }}">
-                                <label for="quantity_{{ item.id }}" class="block text-sm font-semibold text-gray-600">Kiekis:</label>
-                                <input id="quantity_{{ item.id }}" type="number" name="quantity" value="{{ item.quantity }}" min="1" class="mt-1 w-16 text-center border border-gray-300 rounded-md" oninput="delayedSubmit(this.form);">
-                            </form>
-                        </div>
+                        <!-- Quantity and price display, but only for non-wrapping paper items -->
+                        {% if not item.wrapping_paper %}
+                            <div class="mt-2 flex justify-end">
+                                <form action="{% url 'shop:update_cart' %}" method="post" class="bg-white p-1 rounded-md">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="item_id" value="{{ item.id }}">
+                                    <label for="quantity_{{ item.id }}" class="block text-sm font-semibold text-gray-600">Kiekis:</label>
+                                    <input id="quantity_{{ item.id }}" type="number" name="quantity" value="{{ item.quantity }}" min="1" class="mt-1 w-16 text-center border border-gray-300 rounded-md" oninput="delayedSubmit(this.form);">
+                                </form>
+                            </div>
+                        {% endif %}
                     </div>
                 {% endfor %}
             </div>
@@ -93,7 +104,6 @@
         function delayedSubmit(form) {
             clearTimeout(timer);
             timer = setTimeout(function () {
-                // Ensure the quantity is set to 1 if the input is empty
                 const quantityInput = form.querySelector('input[name="quantity"]');
                 if (!quantityInput.value || isNaN(quantityInput.value) || parseInt(quantityInput.value) <= 0) {
                     quantityInput.value = 1;

@@ -131,6 +131,14 @@ class OrderDecoration(models.Model):
         return f"{self.quantity} x {self.decoration.color}"
 
 
+class OrderWrappingPaper(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="order_wrapping_papers")
+    wrapping_paper = models.ForeignKey(WrappingPaper, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.wrapping_paper.color} for Order #{self.order.id}"
+
+
 class Cart(models.Model):
     session_key = models.CharField(max_length=40, null=True, blank=True, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -147,6 +155,7 @@ class CartItem(models.Model):
     flower = models.ForeignKey(Flowers, null=True, blank=True, on_delete=models.CASCADE)
     decoration = models.ForeignKey(Decorations, null=True, blank=True, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
+    wrapping_paper = models.ForeignKey('WrappingPaper', on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         if self.flower:

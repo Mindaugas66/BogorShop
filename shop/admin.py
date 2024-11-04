@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Flowers, Decorations, Order, Client, DecorationType, DeliveryOption, OrderDecoration, OrderFlower, Cart, CartItem, ContactUs, WrappingPaper
+from .models import Flowers, Decorations, Order, Client, DecorationType, DeliveryOption, OrderDecoration, OrderFlower, Cart, CartItem, ContactUs, WrappingPaper, Visitor
 
 
 class FlowersAdmin(admin.ModelAdmin):
@@ -8,7 +8,7 @@ class FlowersAdmin(admin.ModelAdmin):
 
 
 class DecorationAdmin(admin.ModelAdmin):
-    list_display = ('type', 'color', 'remaining', 'price', 'image')
+    list_display = ('type', 'color', 'remaining', 'cost_to_buy' ,'price', 'image')
 
 
 class DecorationTypeAdmin(admin.ModelAdmin):
@@ -35,8 +35,12 @@ class ContactUsAdmin(admin.ModelAdmin):
 class OrderAdmin(admin.ModelAdmin):
     list_display = ('client', 'created_at', 'delivery_option', 'status', 'total_price')
 
+class VisotorAdmin(admin.ModelAdmin):
+    list_display = ('ip_address', 'date')
+
 
 admin.site.register(Flowers, FlowersAdmin)
+admin.site.register(Visitor, VisotorAdmin)
 admin.site.register(Decorations, DecorationAdmin)
 admin.site.register(WrappingPaper, WrappingPaperAdmin)
 admin.site.register(Order, OrderAdmin)

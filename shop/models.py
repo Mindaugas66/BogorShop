@@ -5,6 +5,7 @@ class Flowers(models.Model):
     color = models.CharField(verbose_name='Color', max_length=50)
     remaining = models.IntegerField(verbose_name='Remaining', default=0)
     price = models.FloatField(verbose_name='Price', default=1.99)
+    cost_to_produce = models.FloatField(verbose_name='Cost to produce', default=0.30)
     flower_img = models.ImageField(upload_to='flowers/')
     bouquets_img = models.ImageField(upload_to='bouquets/')
 
@@ -23,6 +24,7 @@ class DecorationType(models.Model):
 class Decorations(models.Model):
     type = models.ForeignKey(DecorationType, verbose_name='Type', on_delete=models.CASCADE)
     color = models.CharField(verbose_name='Color', max_length=50)
+    cost_to_buy = models.FloatField(verbose_name='Cost to buy', default=1)
     remaining = models.IntegerField(verbose_name='Remaining', default=0)
     price = models.FloatField(verbose_name='Price')
     image = models.ImageField(upload_to='decorations/')
@@ -179,3 +181,10 @@ class ContactUs(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.email}"
+
+class Visitor(models.Model):
+    date = models.DateField(auto_now_add=True)
+    ip_address = models.GenericIPAddressField()
+
+    def __str__(self):
+        return f"Visitor on {self.date} from {self.ip_address}"
